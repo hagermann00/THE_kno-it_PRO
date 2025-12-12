@@ -1,80 +1,119 @@
-# Kno-It
+# Kno-It: Multi-LLM Research Intelligence Engine
 
-> Multi-LLM Research Intelligence Engine
+**Complete.** Now fully functional with 6 research presets, statistical analysis, and outlier detection.
 
-A standalone, modular research system that orchestrates multiple AI providers (Gemini, OpenAI, Anthropic) for deep, redundant, cross-validated research.
+## Quick Start
 
-## Vision
+```bash
+# Install dependencies
+npm install
 
-Kno-It is designed to be:
-- **Standalone** — Works independently as a research tool
-- **Modular** — Can be imported by other projects (like Y-IT Machine)
-- **Multi-Engine** — Leverages multiple LLMs for consensus and validation
-- **Redundant** — Cross-checks facts across providers to catch hallucinations
+# Set up environment
+cp .env.example .env
+# Add your API keys to .env
 
-## Features (Planned)
+# Run demo
+npm run demo "dropshipping profit margins 2024"
+```
 
-- [ ] Multi-LLM Provider Layer (Gemini, OpenAI, Anthropic)
-- [ ] Model Registry with live pricing
-- [ ] Deep Research Mode (multi-pass, multi-agent)
-- [ ] Cross-Validation / Consensus Engine
-- [ ] Disagreement Flagging
-- [ ] MCP Tool Integration (universal search)
-- [ ] Cost Estimation
-- [ ] Simple CLI / UI for standalone use
+## Features
+
+### ✅ 6 Research Presets
+
+| Preset | Models | Cost | Time | Best For |
+|--------|--------|------|------|----------|
+| Flash | 1 | ~$0.005 | 5s | Quick facts |
+| Budget | 1 | ~$0.02 | 20s | Low-stakes research |
+| Quick | 1 | ~$0.05 | 30s | Fast single-source |
+| Standard | 3 | ~$0.15 | 45s | Reliable multi-source |
+| Verified | 4 | ~$0.40 | 90s | High-confidence |
+| Deep Dive | 6+ | ~$2.00 | 4min | Critical decisions |
+
+### ✅ Statistical Analysis
+
+**Average**: Consensus calculation across models  
+**Variance**: Disagreement detection and mapping  
+**Derivatives**: Meta-insights from patterns
+
+### ✅ Outlier Detection
+
+Automatically classifies outlier responses as:
+- **Hallucination** → Exclude
+- **Valuable Dissent** → Highlight
+- **Outdated** → Note context
+- **Misunderstood Query** → Re-run
+
+### ✅ 21 Models Across 4 Providers
+
+- Anthropic: 5 models
+- OpenAI: 9 models
+- Gemini: 5 models
+- DeepSeek: 2 models
+
+## Programmatic Usage
+
+```typescript
+import { ResearchEngine, providerRegistry, createConfig } from 'kno-it';
+
+// Initialize
+const config = createConfig({
+  geminiKey: process.env.GEMINI_API_KEY,
+  openaiKey: process.env.OPENAI_API_KEY,
+  anthropicKey: process.env.ANTHROPIC_API_KEY,
+  deepseekKey: process.env.DEEPSEEK_API_KEY
+});
+
+providerRegistry.initialize(config);
+
+// Research
+const engine = new ResearchEngine({
+  depth: 'verified',
+  primaryModel: 'gemini-2.5-flash'
+});
+
+const results = await engine.investigate("your research topic");
+
+// Results include:
+// - confirmed: Facts all models agree on
+// - disputed: Contradictory claims
+// - unique: Single-source findings
+// - derivatives: Meta-insights
+// - outliers: Flagged anomalies
+// - costBreakdown: Exact API costs
+```
 
 ## Architecture
 
 ```
 kno-it/
 ├── src/
-│   ├── core/           # Provider abstraction, registry
-│   ├── providers/      # Gemini, OpenAI, Anthropic implementations
-│   ├── research/       # Agents, orchestration, consensus
-│   ├── mcp/            # MCP tool integration
-│   └── index.ts        # Clean API export
-├── .agent/             # AI context and workflows
-└── package.json
+│   ├── core/
+│   │   ├── types.ts              # Type definitions
+│   │   ├── ModelRegistry.ts      # 21 models with pricing
+│   │   └── ProviderRegistry.ts   # Provider management
+│   ├── providers/
+│   │   ├── LLMProvider.ts        # Base class
+│   │   ├── AnthropicProvider.ts
+│   │   ├── GeminiProvider.ts
+│   │   ├── OpenAIProvider.ts
+│   │   └── DeepSeekProvider.ts
+│   ├── research/
+│   │   ├── ResearchEngine.ts     # Main orchestrator
+│   │   ├── ConsensusEngine.ts    # Statistical analysis
+│   │   └── OutlierIsolator.ts    # Quality control
+│   ├── index.ts                  # Public API
+│   └── demo.ts                   # CLI demo
+└── .agent/
+    ├── RESEARCH_PRESETS.md
+    ├── STATISTICAL_ANALYSIS.md
+    ├── OUTLIER_DETECTION.md
+    └── ADDITIONAL_MODELS.md
 ```
 
-## Usage (Planned)
+## Version
 
-```typescript
-import { ResearchEngine } from 'kno-it';
-
-const engine = new ResearchEngine({
-  depth: 'verified',          // quick | standard | verified | deep-dive
-  primaryModel: 'gemini-2.5-flash',
-  validationModel: 'claude-sonnet-4.5',
-});
-
-const results = await engine.investigate("Dropshipping ROI 2024");
-
-console.log(results.confirmed);     // Facts all engines agree on
-console.log(results.disputed);      // Disagreements flagged
-console.log(results.sources);       // Source URLs
-console.log(results.costBreakdown); // What it cost
-```
-
-## Integration with Y-IT
-
-Y-IT Machine can import Kno-It as a module:
-
-```typescript
-// In Y-IT
-import { ResearchEngine } from '../kno-it';
-// or
-import { ResearchEngine } from 'kno-it'; // if published to npm
-```
-
-## Development
-
-```bash
-cd kno-it
-npm install
-npm run dev
-```
+**v0.2.0** - ResearchEngine complete with full statistical analysis
 
 ## License
 
-Proprietary — Y-OS Project
+Proprietary - Y-OS Project

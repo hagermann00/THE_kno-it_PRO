@@ -19,11 +19,13 @@ export { GeminiProvider } from './providers/GeminiProvider';
 export { OpenAIProvider } from './providers/OpenAIProvider';
 export { DeepSeekProvider } from './providers/DeepSeekProvider';
 
-// Placeholder for future exports
-// export { ResearchEngine } from './research/ResearchEngine';
+// Research engine
+export { ResearchEngine } from './research/ResearchEngine';
+export { ConsensusEngine } from './research/ConsensusEngine';
+export { OutlierIsolator } from './research/OutlierIsolator';
 
 // Version
-export const VERSION = '0.1.0';
+export const VERSION = '0.2.0';  // Bumped: ResearchEngine complete
 
 // Quick start helper
 export function createConfig(options: {
