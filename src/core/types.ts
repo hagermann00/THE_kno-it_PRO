@@ -179,6 +179,7 @@ export interface KnoItConfig {
         gemini?: { apiKey: string };
         openai?: { apiKey: string };
         anthropic?: { apiKey: string };
+        deepseek?: { apiKey: string };
     };
 
     defaults: {

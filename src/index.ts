@@ -7,11 +7,20 @@
 export * from './core/types';
 
 // Model registry
-export { modelRegistry, CLAUDE_MODELS, OPENAI_MODELS, GEMINI_MODELS } from './core/ModelRegistry';
+export { modelRegistry, CLAUDE_MODELS, OPENAI_MODELS, GEMINI_MODELS, DEEPSEEK_MODELS } from './core/ModelRegistry';
+
+// Provider registry
+export { providerRegistry } from './core/ProviderRegistry';
+
+// Individual providers
+export { LLMProvider } from './providers/LLMProvider';
+export { AnthropicProvider } from './providers/AnthropicProvider';
+export { GeminiProvider } from './providers/GeminiProvider';
+export { OpenAIProvider } from './providers/OpenAIProvider';
+export { DeepSeekProvider } from './providers/DeepSeekProvider';
 
 // Placeholder for future exports
 // export { ResearchEngine } from './research/ResearchEngine';
-// export { LLMProvider } from './providers/LLMProvider';
 
 // Version
 export const VERSION = '0.1.0';
@@ -21,18 +30,21 @@ export function createConfig(options: {
     geminiKey?: string;
     openaiKey?: string;
     anthropicKey?: string;
+    deepseekKey?: string;
 }) {
     return {
         providers: {
             ...(options.geminiKey && { gemini: { apiKey: options.geminiKey } }),
             ...(options.openaiKey && { openai: { apiKey: options.openaiKey } }),
             ...(options.anthropicKey && { anthropic: { apiKey: options.anthropicKey } }),
+            ...(options.deepseekKey && { deepseek: { apiKey: options.deepseekKey } }),
         },
         defaults: {
             researchDepth: 'standard' as const,
-            primaryModel: options.geminiKey ? 'gemini-2.5-flash' :
-                options.openaiKey ? 'gpt-4o-mini' :
-                    'claude-3.5-haiku',
+            primaryModel: options.deepseekKey ? 'deepseek-chat' :
+                options.geminiKey ? 'gemini-2.5-flash' :
+                    options.openaiKey ? 'gpt-4o-mini' :
+                        'claude-3.5-haiku',
         }
     };
 }
@@ -48,7 +60,7 @@ if (process.argv[1]?.endsWith('index.ts') || process.argv[1]?.endsWith('index.js
 ║  Status: Foundation Ready                                     ║
 ║                                                               ║
 ║  Available Models: ${modelRegistry.getAll().length}                                        ║
-║  Providers: Gemini, OpenAI, Anthropic                         ║
+║  Providers: Gemini, OpenAI, Anthropic, DeepSeek               ║
 ╚═══════════════════════════════════════════════════════════════╝
 
 Next Steps:
@@ -65,7 +77,7 @@ For programmatic use:
         console.log('\nModel Summary:');
         console.log('─'.repeat(60));
 
-        const providers = ['gemini', 'openai', 'anthropic'] as const;
+        const providers = ['gemini', 'openai', 'anthropic', 'deepseek'] as const;
         providers.forEach(p => {
             const models = modelRegistry.getByProvider(p);
             console.log(`\n${p.toUpperCase()} (${models.length} models):`);
