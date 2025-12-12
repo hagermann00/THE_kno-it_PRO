@@ -1,0 +1,38 @@
+{
+    "name": "kno-it",
+    "version": "0.1.0",
+    "description": "Multi-LLM Research Intelligence Engine",
+    "type": "module",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "dev": "tsx watch src/index.ts",
+        "build": "tsc",
+        "test": "vitest",
+        "lint": "eslint src/"
+    },
+    "keywords": [
+        "llm",
+        "research",
+        "ai",
+        "gemini",
+        "openai",
+        "anthropic",
+        "multi-model"
+    ],
+    "author": "Y-OS Project",
+    "license": "UNLICENSED",
+    "dependencies": {
+        "@google/genai": "^1.0.0",
+        "openai": "^4.0.0",
+        "@anthropic-ai/sdk": "^0.30.0",
+        "zod": "^3.23.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.0.0",
+        "typescript": "^5.0.0",
+        "tsx": "^4.0.0",
+        "vitest": "^2.0.0",
+        "eslint": "^9.0.0"
+    }
+}
