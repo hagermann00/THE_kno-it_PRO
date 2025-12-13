@@ -3,6 +3,7 @@
  * Test the research engine from command line
  */
 
+import 'dotenv/config';
 import { providerRegistry } from './core/ProviderRegistry.js';
 import { ResearchEngine } from './research/ResearchEngine.js';
 import { createConfig } from './index.js';
@@ -40,7 +41,8 @@ async function main() {
         geminiKey: process.env.GEMINI_API_KEY,
         openaiKey: process.env.OPENAI_API_KEY,
         anthropicKey: process.env.ANTHROPIC_API_KEY,
-        deepseekKey: process.env.DEEPSEEK_API_KEY
+        deepseekKey: process.env.DEEPSEEK_API_KEY,
+        groqKey: process.env.GROQ_API_KEY
     });
 
     providerRegistry.initialize(config as any);
