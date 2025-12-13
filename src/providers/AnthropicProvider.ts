@@ -4,9 +4,9 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
-import { LLMProvider } from './LLMProvider';
-import { TextGenParams, TextGenResult, ModelCapability } from '../core/types';
-import { modelRegistry } from '../core/ModelRegistry';
+import { LLMProvider } from './LLMProvider.js';
+import { TextGenParams, TextGenResult, ModelCapability } from '../core/types.js';
+import { modelRegistry } from '../core/ModelRegistry.js';
 
 export class AnthropicProvider extends LLMProvider {
     readonly id = 'anthropic' as const;

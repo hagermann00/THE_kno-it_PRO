@@ -3,7 +3,7 @@
  * Detects and classifies responses that deviate from consensus
  */
 
-import { TextGenResult } from '../core/types';
+import { TextGenResult } from '../core/types.js';
 
 export type OutlierType = 'hallucination' | 'valuable-dissent' | 'outdated' | 'misunderstood-query';
 
@@ -167,7 +167,7 @@ export class OutlierIsolator {
             const outlierAvg = outlierNumbers.reduce((a, b) => a + b, 0) / outlierNumbers.length;
             const consensusAvg = consensusNumbers.reduce((a, b) => a + b, 0) / consensusNumbers.length;
 
-            if (outlierAvg > consuAvg * 10 || outlierAvg < consensusAvg / 10) {
+            if (outlierAvg > consensusAvg * 10 || outlierAvg < consensusAvg / 10) {
                 return {
                     isOutlier: true,
                     type: 'hallucination',

@@ -6,9 +6,9 @@
  */
 
 import OpenAI from 'openai';
-import { LLMProvider } from './LLMProvider';
-import { TextGenParams, TextGenResult, ModelCapability } from '../core/types';
-import { modelRegistry } from '../core/ModelRegistry';
+import { LLMProvider } from './LLMProvider.js';
+import { TextGenParams, TextGenResult, ModelCapability } from '../core/types.js';
+import { modelRegistry } from '../core/ModelRegistry.js';
 
 export class OpenAIProvider extends LLMProvider {
     readonly id = 'openai' as const;

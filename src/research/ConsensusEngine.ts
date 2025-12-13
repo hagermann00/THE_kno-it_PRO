@@ -3,7 +3,7 @@
  * Analyzes multiple model responses to find averages, variance, and derivatives
  */
 
-import { ModelResponse, StatisticalFact, Consensus, Variance, Derivative } from './types';
+// Types are defined locally below
 
 export class ConsensusEngine {
 

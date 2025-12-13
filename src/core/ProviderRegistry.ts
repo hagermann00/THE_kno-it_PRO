@@ -3,12 +3,16 @@
  * Central registry managing all LLM provider instances
  */
 
-import { LLMProvider } from '../providers/LLMProvider';
-import { AnthropicProvider } from '../providers/AnthropicProvider';
-import { GeminiProvider } from '../providers/GeminiProvider';
-import { OpenAIProvider } from '../providers/OpenAIProvider';
-import { DeepSeekProvider } from '../providers/DeepSeekProvider';
-import { ProviderID, KnoItConfig } from './types';
+import { LLMProvider } from '../providers/LLMProvider.js';
+import { AnthropicProvider } from '../providers/AnthropicProvider.js';
+import { GeminiProvider } from '../providers/GeminiProvider.js';
+import { OpenAIProvider } from '../providers/OpenAIProvider.js';
+import { DeepSeekProvider } from '../providers/DeepSeekProvider.js';
+import { MockProvider } from '../providers/MockProvider.js';
+import { OllamaProvider } from '../providers/OllamaProvider.js';
+import { GroqProvider } from '../providers/GroqProvider.js';
+import { HuggingFaceProvider } from '../providers/HuggingFaceProvider.js';
+import { ProviderID, KnoItConfig } from './types.js';
 
 export class ProviderRegistry {
     private providers: Map<ProviderID, LLMProvider> = new Map();
@@ -22,6 +26,26 @@ export class ProviderRegistry {
             console.warn('[ProviderRegistry] Already initialized');
             return;
         }
+
+        // -------------------------------------------------------------------------
+        // MOCK MODE (ZERO COST)
+        // -------------------------------------------------------------------------
+        if (process.env.USE_MOCK === 'true') {
+            console.log('\n🎰 Kno-It Simulator Activated (ZERO COST MODE)');
+            console.log('   Simulating: Gemini, OpenAI, Anthropic, DeepSeek\n');
+
+            this.providers.set('gemini', new MockProvider('gemini'));
+            this.providers.set('openai', new MockProvider('openai'));
+            this.providers.set('anthropic', new MockProvider('anthropic'));
+            this.providers.set('deepseek', new MockProvider('deepseek'));
+
+            this.initialized = true;
+            return;
+        }
+
+        // -------------------------------------------------------------------------
+        // REAL API MODE
+        // -------------------------------------------------------------------------
 
         // Initialize Gemini if key provided
         if (config.providers.gemini?.apiKey) {
@@ -67,6 +91,40 @@ export class ProviderRegistry {
             }
         }
 
+        // Initialize Ollama (Always enabled if USE_OLLAMA is set, or if base URL is provided)
+        if (process.env.USE_OLLAMA === 'true' || process.env.OLLAMA_BASE_URL) {
+            try {
+                const url = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
+                const provider = new OllamaProvider(url);
+                this.providers.set('ollama', provider);
+                console.log('[ProviderRegistry] Initialized Ollama provider (Local)');
+            } catch (error) {
+                console.error('[ProviderRegistry] Failed to initialize Ollama:', error);
+            }
+        }
+
+        // Initialize Groq if key provided
+        if (config.providers.groq?.apiKey) {
+            try {
+                const provider = new GroqProvider(config.providers.groq.apiKey);
+                this.providers.set('groq', provider);
+                console.log('[ProviderRegistry] Initialized Groq provider');
+            } catch (error) {
+                console.error('[ProviderRegistry] Failed to initialize Groq:', error);
+            }
+        }
+
+        // Initialize Hugging Face
+        if (config.providers.huggingface?.apiKey) {
+            try {
+                const provider = new HuggingFaceProvider(config.providers.huggingface.apiKey);
+                this.providers.set('huggingface', provider);
+                console.log('[ProviderRegistry] Initialized Hugging Face provider');
+            } catch (error) {
+                console.error('[ProviderRegistry] Failed to initialize Hugging Face:', error);
+            }
+        }
+
         this.initialized = true;
 
         if (this.providers.size === 0) {
@@ -97,6 +155,15 @@ export class ProviderRegistry {
         }
         if (modelId.startsWith('deepseek')) {
             return this.providers.get('deepseek');
+        }
+        if (modelId.startsWith('ollama')) {
+            return this.providers.get('ollama');
+        }
+        if (modelId.startsWith('llama') || modelId.startsWith('mixtral')) {
+            return this.providers.get('groq');
+        }
+        if (modelId.includes('/') || modelId.startsWith('mistralai') || modelId.startsWith('microsoft')) {
+            return this.providers.get('huggingface');
         }
 
         return undefined;

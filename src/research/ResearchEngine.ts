@@ -3,11 +3,11 @@
  * Multi-LLM research orchestrator with statistical analysis
  */
 
-import { providerRegistry } from '../core/ProviderRegistry';
-import { modelRegistry } from '../core/ModelRegistry';
-import { TextGenParams, TextGenResult, ResearchDepth, ResearchResult, ResearchConfig } from '../core/types';
-import { ConsensusEngine } from './ConsensusEngine';
-import { OutlierIsolator } from './OutlierIsolator';
+import { providerRegistry } from '../core/ProviderRegistry.js';
+import { modelRegistry } from '../core/ModelRegistry.js';
+import { TextGenParams, TextGenResult, ResearchDepth, ResearchResult, ResearchConfig } from '../core/types.js';
+import { ConsensusEngine } from './ConsensusEngine.js';
+import { OutlierIsolator } from './OutlierIsolator.js';
 
 export class ResearchEngine {
     private consensusEngine: ConsensusEngine;
@@ -38,9 +38,16 @@ export class ResearchEngine {
         console.log(`[ResearchEngine] Found ${outlierReport.outliers.length} outliers`);
 
         // Get valid responses only
-        const validResponses = responses.filter(r =>
+        let validResponses = responses.filter(r =>
             outlierReport.validResponses.includes(r.model)
         );
+
+        // FALLBACK: If all responses were rejected (high disagreement), use ALL responses
+        // This prevents the "Cannot calculate consensus from zero responses" crash
+        if (validResponses.length === 0) {
+            console.warn('[ResearchEngine] ⚠️ All responses were outliers! Falling back to raw dataset.');
+            validResponses = responses;
+        }
 
         // Calculate consensus
         const modelResponses = validResponses.map(r => ({
@@ -117,70 +124,79 @@ export class ResearchEngine {
      * Get workflow configuration for research depth
      */
     private getWorkflow(depth: ResearchDepth): WorkflowConfig {
+        let models: string[] = [];
+        let passes = 1;
+        let validateOutliers = false;
+        let tieBreaker: string | undefined;
+
         switch (depth) {
             case 'flash':
-                return {
-                    models: ['gemini-2.5-flash-lite'],
-                    passes: 1,
-                    validateOutliers: false
-                };
+                models = ['gemini-2.5-flash-lite'];
+                break;
 
             case 'budget':
-                return {
-                    models: ['deepseek-chat'],
-                    passes: 1,
-                    validateOutliers: false
-                };
+                models = ['deepseek-chat'];
+                break;
 
             case 'quick':
-                return {
-                    models: ['gemini-2.5-flash'],
-                    passes: 1,
-                    validateOutliers: false,
-                };
+                models = ['gemini-2.5-flash'];
+                break;
 
             case 'standard':
-                return {
-                    models: ['gemini-2.5-flash', 'gpt-4o-mini', 'claude-3.5-haiku'],
-                    passes: 1,
-                    validateOutliers: true
-                };
+                models = ['gemini-2.5-flash', 'gpt-4o-mini', 'claude-3.5-haiku'];
+                validateOutliers = true;
+                break;
 
             case 'verified':
-                return {
-                    models: [
-                        'gemini-2.5-flash',
-                        'gpt-4o',
-                        'claude-sonnet-4',
-                        'deepseek-chat'
-                    ],
-                    passes: 1,
-                    validateOutliers: true,
-                    tieBreaker: 'claude-sonnet-4.5'
-                };
+                models = ['gemini-2.5-flash', 'gpt-4o', 'claude-sonnet-4', 'deepseek-chat'];
+                validateOutliers = true;
+                tieBreaker = 'claude-sonnet-4.5';
+                break;
 
             case 'deep-dive':
-                return {
-                    models: [
-                        'deepseek-chat',        // Fast
-                        'gemini-2.5-flash',     // Balanced
-                        'claude-sonnet-4.5',    // Premium
-                        'gpt-4o',               // Detective
-                        'claude-sonnet-4',      // Skeptic
-                        'gemini-2.5-pro'        // Insider
-                    ],
-                    passes: 2,  // Multi-pass with refinement
-                    validateOutliers: true,
-                    tieBreaker: 'o3'  // Reasoning model for final validation
-                };
+                models = [
+                    'deepseek-chat',
+                    'gemini-2.5-flash',
+                    'claude-sonnet-4.5',
+                    'gpt-4o',
+                    'claude-sonnet-4',
+                    'gemini-2.5-pro'
+                ];
+                passes = 2;
+                validateOutliers = true;
+                tieBreaker = 'o3';
+                break;
 
             default:
-                return {
-                    models: [this.config.primaryModel],
-                    passes: 1,
-                    validateOutliers: false
-                };
+                models = [this.config.primaryModel];
         }
+
+        // -------------------------------------------------------------------------
+        // SMART FALLBACK (FREE TIER LOGIC)
+        // Filter out models that originate from providers we don't have keys for.
+        // -------------------------------------------------------------------------
+        const availableModels = models.filter(m => {
+            const provider = providerRegistry.getProviderForModel(m);
+            return provider !== undefined;
+        });
+
+        // If we filtered out everything (e.g. user only has Gemini but requested 'budget' which is DeepSeek),
+        // Force fallback to the Primary Model (which is guaranteed to exist by config defaults).
+        if (availableModels.length === 0) {
+            console.warn(`[ResearchEngine] Requested models [${models.join(', ')}] not available. Falling back to ${this.config.primaryModel}`);
+            return {
+                models: [this.config.primaryModel],
+                passes: 1,
+                validateOutliers: false
+            };
+        }
+
+        return {
+            models: availableModels,
+            passes,
+            validateOutliers: validateOutliers && availableModels.length > 1, // Can only find outliers if we have >1 model
+            tieBreaker: tieBreaker && providerRegistry.getProviderForModel(tieBreaker) ? tieBreaker : undefined
+        };
     }
 
     /**

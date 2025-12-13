@@ -3,7 +3,7 @@
  * Central registry of all available models with pricing and capabilities
  */
 
-import { ModelDefinition, ProviderID, ModelCapability } from './types';
+import { ModelDefinition, ProviderID, ModelCapability } from './types.js';
 
 // ============================================================================
 // Anthropic Claude Models
@@ -286,6 +286,21 @@ const GEMINI_MODELS: ModelDefinition[] = [
         qualityTier: 5
     },
     {
+        id: 'gemini-3.0-pro',
+        provider: 'gemini',
+        displayName: 'Gemini 3.0 Pro',
+        pricing: {
+            inputPerMillion: 1.25, // Assuming similar to 2.5 Pro
+            outputPerMillion: 10.00,
+            lastUpdated: '2025-12-12'
+        },
+        capabilities: ['text-generation', 'json-mode', 'tool-calling', 'vision', 'extended-thinking', 'web-search'],
+        contextWindow: 2000000,
+        maxOutput: 8192,
+        speed: 'medium',
+        qualityTier: 5  // Top Tier
+    },
+    {
         id: 'gemini-2.5-pro-long',
         provider: 'gemini',
         displayName: 'Gemini 2.5 Pro (Long Context)',
@@ -342,6 +357,124 @@ const DEEPSEEK_MODELS: ModelDefinition[] = [
 ];
 
 // ============================================================================
+// Ollama Models (Local)
+// ============================================================================
+
+const OLLAMA_MODELS: ModelDefinition[] = [
+    {
+        id: 'ollama-llama3',
+        provider: 'ollama',
+        displayName: 'Llama 3 (Local)',
+        pricing: {
+            inputPerMillion: 0,
+            outputPerMillion: 0,
+            lastUpdated: '2024-12-12'
+        },
+        capabilities: ['text-generation', 'json-mode'],
+        contextWindow: 8192,
+        maxOutput: 4096,
+        speed: 'medium',
+        qualityTier: 3
+    },
+    {
+        id: 'ollama-mistral',
+        provider: 'ollama',
+        displayName: 'Mistral (Local)',
+        pricing: {
+            inputPerMillion: 0,
+            outputPerMillion: 0,
+            lastUpdated: '2024-12-12'
+        },
+        capabilities: ['text-generation', 'json-mode'],
+        contextWindow: 8192,
+        maxOutput: 4096,
+        speed: 'fast',
+        qualityTier: 3
+    }
+];
+
+// ============================================================================
+// Hugging Face Models (Free Cloud)
+// ============================================================================
+
+const HF_MODELS: ModelDefinition[] = [
+    {
+        id: 'mistralai/Mistral-7B-Instruct-v0.3',
+        provider: 'huggingface',
+        displayName: 'Mistral 7B (HF)',
+        pricing: { inputPerMillion: 0, outputPerMillion: 0, lastUpdated: '2025-12-12' },
+        capabilities: ['text-generation'],
+        contextWindow: 32768,
+        maxOutput: 4096,
+        speed: 'medium',
+        qualityTier: 3
+    },
+    {
+        id: 'microsoft/Phi-3-mini-4k-instruct',
+        provider: 'huggingface',
+        displayName: 'Phi-3 Mini (HF)',
+        pricing: { inputPerMillion: 0, outputPerMillion: 0, lastUpdated: '2025-12-12' },
+        capabilities: ['text-generation'],
+        contextWindow: 4096,
+        maxOutput: 2048,
+        speed: 'fast',
+        qualityTier: 3
+    }
+];
+
+// ============================================================================
+// Groq Models (Free Beta / Low Cost)
+// ============================================================================
+
+const GROQ_MODELS: ModelDefinition[] = [
+    {
+        id: 'llama3-70b-8192',
+        provider: 'groq',
+        displayName: 'Llama 3 70B (Groq)',
+        pricing: {
+            inputPerMillion: 0, // Currently Free
+            outputPerMillion: 0,
+            lastUpdated: '2024-12-12'
+        },
+        capabilities: ['text-generation', 'json-mode', 'tool-calling'],
+        contextWindow: 8192,
+        maxOutput: 4096,
+        speed: 'fast',
+        qualityTier: 4
+    },
+    {
+        id: 'llama3-8b-8192',
+        provider: 'groq',
+        displayName: 'Llama 3 8B (Groq)',
+        pricing: {
+            inputPerMillion: 0,
+            outputPerMillion: 0,
+            lastUpdated: '2024-12-12'
+        },
+        capabilities: ['text-generation', 'json-mode', 'tool-calling'],
+        contextWindow: 8192,
+        maxOutput: 4096,
+        speed: 'fast',
+        qualityTier: 3
+    },
+    {
+        id: 'mixtral-8x7b-32768',
+        provider: 'groq',
+        displayName: 'Mixtral 8x7B (Groq)',
+        pricing: {
+            inputPerMillion: 0,
+            outputPerMillion: 0,
+            lastUpdated: '2024-12-12'
+        },
+        capabilities: ['text-generation', 'json-mode', 'tool-calling'],
+        contextWindow: 32768,
+        maxOutput: 4096,
+        speed: 'fast',
+        qualityTier: 3
+    }
+];
+
+// ============================================================================
 // Registry Class
 // ============================================================================
 
@@ -350,7 +483,7 @@ class ModelRegistry {
 
     constructor() {
         // Load all models
-        [...CLAUDE_MODELS, ...OPENAI_MODELS, ...GEMINI_MODELS, ...DEEPSEEK_MODELS].forEach(model => {
+        [...CLAUDE_MODELS, ...OPENAI_MODELS, ...GEMINI_MODELS, ...DEEPSEEK_MODELS, ...OLLAMA_MODELS, ...GROQ_MODELS].forEach(model => {
             this.models.set(model.id, model);
         });
     }
@@ -403,4 +536,4 @@ class ModelRegistry {
 export const modelRegistry = new ModelRegistry();
 
 // Export for direct access if needed
-export { CLAUDE_MODELS, OPENAI_MODELS, GEMINI_MODELS, DEEPSEEK_MODELS };
+export { CLAUDE_MODELS, OPENAI_MODELS, GEMINI_MODELS, DEEPSEEK_MODELS, OLLAMA_MODELS, GROQ_MODELS };

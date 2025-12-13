@@ -4,25 +4,26 @@
  */
 
 // Core types
-export * from './core/types';
+export * from './core/types.js';
 
 // Model registry
-export { modelRegistry, CLAUDE_MODELS, OPENAI_MODELS, GEMINI_MODELS, DEEPSEEK_MODELS } from './core/ModelRegistry';
+export { modelRegistry, CLAUDE_MODELS, OPENAI_MODELS, GEMINI_MODELS, DEEPSEEK_MODELS, OLLAMA_MODELS } from './core/ModelRegistry.js';
 
 // Provider registry
-export { providerRegistry } from './core/ProviderRegistry';
+export { providerRegistry } from './core/ProviderRegistry.js';
 
 // Individual providers
-export { LLMProvider } from './providers/LLMProvider';
-export { AnthropicProvider } from './providers/AnthropicProvider';
-export { GeminiProvider } from './providers/GeminiProvider';
-export { OpenAIProvider } from './providers/OpenAIProvider';
-export { DeepSeekProvider } from './providers/DeepSeekProvider';
+export { LLMProvider } from './providers/LLMProvider.js';
+export { AnthropicProvider } from './providers/AnthropicProvider.js';
+export { GeminiProvider } from './providers/GeminiProvider.js';
+export { OpenAIProvider } from './providers/OpenAIProvider.js';
+export { DeepSeekProvider } from './providers/DeepSeekProvider.js';
+export { OllamaProvider } from './providers/OllamaProvider.js';
 
 // Research engine
-export { ResearchEngine } from './research/ResearchEngine';
-export { ConsensusEngine } from './research/ConsensusEngine';
-export { OutlierIsolator } from './research/OutlierIsolator';
+export { ResearchEngine } from './research/ResearchEngine.js';
+export { ConsensusEngine } from './research/ConsensusEngine.js';
+export { OutlierIsolator } from './research/OutlierIsolator.js';
 
 // Version
 export const VERSION = '0.2.0';  // Bumped: ResearchEngine complete
@@ -33,6 +34,7 @@ export function createConfig(options: {
     openaiKey?: string;
     anthropicKey?: string;
     deepseekKey?: string;
+    groqKey?: string;
 }) {
     return {
         providers: {
@@ -40,6 +42,7 @@ export function createConfig(options: {
             ...(options.openaiKey && { openai: { apiKey: options.openaiKey } }),
             ...(options.anthropicKey && { anthropic: { apiKey: options.anthropicKey } }),
             ...(options.deepseekKey && { deepseek: { apiKey: options.deepseekKey } }),
+            ...(options.groqKey && { groq: { apiKey: options.groqKey } }),
         },
         defaults: {
             researchDepth: 'standard' as const,
@@ -75,7 +78,7 @@ For programmatic use:
   `);
 
     // Show model summary
-    import('./core/ModelRegistry').then(({ modelRegistry }) => {
+    import('./core/ModelRegistry.js').then(({ modelRegistry }) => {
         console.log('\nModel Summary:');
         console.log('─'.repeat(60));
 

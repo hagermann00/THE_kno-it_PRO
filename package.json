@@ -7,6 +7,7 @@
     "types": "dist/index.d.ts",
     "scripts": {
         "dev": "tsx watch src/index.ts",
+        "demo": "tsx src/demo.ts",
         "build": "tsc",
         "test": "vitest",
         "lint": "eslint src/"
@@ -23,16 +24,18 @@
     "author": "Y-OS Project",
     "license": "UNLICENSED",
     "dependencies": {
-        "@google/genai": "^1.0.0",
-        "openai": "^4.0.0",
         "@anthropic-ai/sdk": "^0.30.0",
+        "@google/generative-ai": "^0.24.1",
+        "@types/better-sqlite3": "^7.6.13",
+        "better-sqlite3": "^12.5.0",
+        "openai": "^4.0.0",
         "zod": "^3.23.0"
     },
     "devDependencies": {
         "@types/node": "^20.0.0",
-        "typescript": "^5.0.0",
+        "eslint": "^9.0.0",
         "tsx": "^4.0.0",
-        "vitest": "^2.0.0",
-        "eslint": "^9.0.0"
+        "typescript": "^5.0.0",
+        "vitest": "^2.0.0"
     }
 }

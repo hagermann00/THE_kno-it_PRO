@@ -3,7 +3,7 @@
  * Base class that all provider implementations must extend
  */
 
-import { ProviderID, TextGenParams, TextGenResult, ModelCapability } from '../core/types';
+import { ProviderID, TextGenParams, TextGenResult, ModelCapability } from '../core/types.js';
 
 export abstract class LLMProvider {
     abstract readonly id: ProviderID;

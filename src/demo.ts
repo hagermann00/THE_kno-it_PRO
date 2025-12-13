@@ -3,9 +3,9 @@
  * Test the research engine from command line
  */
 
-import { providerRegistry } from './core/ProviderRegistry';
-import { ResearchEngine } from './research/ResearchEngine';
-import { createConfig } from './index';
+import { providerRegistry } from './core/ProviderRegistry.js';
+import { ResearchEngine } from './research/ResearchEngine.js';
+import { createConfig } from './index.js';
 
 async function main() {
     const args = process.argv.slice(2);

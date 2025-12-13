@@ -7,7 +7,7 @@
 // Provider Types
 // ============================================================================
 
-export type ProviderID = 'gemini' | 'openai' | 'anthropic' | 'deepseek';
+export type ProviderID = 'gemini' | 'openai' | 'anthropic' | 'deepseek' | 'ollama' | 'groq' | 'huggingface';
 
 export type ModelCapability =
     | 'text-generation'
@@ -180,6 +180,8 @@ export interface KnoItConfig {
         openai?: { apiKey: string };
         anthropic?: { apiKey: string };
         deepseek?: { apiKey: string };
+        groq?: { apiKey: string };
+        huggingface?: { apiKey: string };
     };
 
     defaults: {

@@ -4,9 +4,9 @@
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { LLMProvider } from './LLMProvider';
-import { TextGenParams, TextGenResult, ModelCapability } from '../core/types';
-import { modelRegistry } from '../core/ModelRegistry';
+import { LLMProvider } from './LLMProvider.js';
+import { TextGenParams, TextGenResult, ModelCapability } from '../core/types.js';
+import { modelRegistry } from '../core/ModelRegistry.js';
 
 export class GeminiProvider extends LLMProvider {
     readonly id = 'gemini' as const;
@@ -36,8 +36,18 @@ export class GeminiProvider extends LLMProvider {
             const modelId = params.model || 'gemini-2.5-flash';
             const modelDef = modelRegistry.get(modelId);
 
+            // INTERNAL-TO-EXTERNAL MODEL MAPPING
+            // INTERNAL-TO-EXTERNAL MODEL MAPPING
+            // We pin generic names to specific versions (2025 Standard)
+            let actualModelId = modelId;
+
+            // Pin Generic Names to Specific Versions
+            if (modelId === 'gemini-3.0-pro') actualModelId = 'gemini-3.0-pro-001';
+
+            // Allow 2.5 and 1.5 to pass through as they are valid legacy models
+
             // Get the model
-            const model = this.client.getGenerativeModel({ model: modelId });
+            const model = this.client.getGenerativeModel({ model: actualModelId });
 
             // Build generation config
             const generationConfig: any = {
