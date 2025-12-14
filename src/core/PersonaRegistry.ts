@@ -131,6 +131,8 @@ export const SQUADS: Record<string, SquadDefinition> = {
     }
 };
 
+export const SQUAD_TYPES = Object.keys(SQUADS);
+
 export const getPersona = (id: string): PersonaDefinition => {
     return PERSONAS[id as PersonaID] || PERSONAS['analyst'];
 };
