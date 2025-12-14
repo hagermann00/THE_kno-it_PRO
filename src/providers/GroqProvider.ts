@@ -14,7 +14,6 @@ export class GroqProvider extends OpenAIProvider {
     constructor(apiKey: string) {
         // Groq uses an OpenAI-compatible API structure
         super(apiKey, 'https://api.groq.com/openai/v1');
-        this.id = 'groq' as any;
     }
 
     // Groq specifically supports text and json, tools are model-dependent but generally supported now

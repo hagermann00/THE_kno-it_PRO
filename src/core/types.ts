@@ -132,6 +132,11 @@ export interface ResearchResult {
         byModel: Record<string, number>;
         total: number;
     };
+
+    // Extended Debug Data
+    variance?: any;
+    derivatives?: any[];
+    outliers?: any[];
 }
 
 // ============================================================================

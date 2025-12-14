@@ -8,8 +8,12 @@ import { LLMProvider } from './LLMProvider.js';
 import { TextGenParams, TextGenResult, ModelCapability } from '../core/types.js';
 import { modelRegistry } from '../core/ModelRegistry.js';
 
+interface HFResult {
+    generated_text: string;
+}
+
 export class HuggingFaceProvider extends LLMProvider {
-    readonly id = 'huggingface' as any;
+    readonly id = 'huggingface';
     readonly name = 'Hugging Face';
 
     private apiKey: string;
@@ -54,13 +58,14 @@ export class HuggingFaceProvider extends LLMProvider {
                 throw new Error(`HuggingFace API Error: ${response.status} - ${error}`);
             }
 
-            const result = await response.json();
+            const rawResult = await response.json();
+            const result = rawResult as HFResult[] | HFResult;
 
             // HF Inference API usually returns an array: [{ generated_text: "..." }]
             let text = '';
             if (Array.isArray(result) && result.length > 0) {
                 text = result[0].generated_text;
-            } else if (typeof result === 'object' && result.generated_text) {
+            } else if (!Array.isArray(result) && result?.generated_text) {
                 text = result.generated_text;
             } else {
                 text = JSON.stringify(result); // Fallback

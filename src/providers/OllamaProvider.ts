@@ -7,6 +7,19 @@ import { LLMProvider } from './LLMProvider.js';
 import { TextGenParams, TextGenResult, ModelCapability } from '../core/types.js';
 import { modelRegistry } from '../core/ModelRegistry.js';
 
+interface OllamaResponse {
+    model: string;
+    created_at: string;
+    response: string;
+    done: boolean;
+    context: number[];
+    total_duration: number;
+    load_duration: number;
+    prompt_eval_count: number;
+    eval_count: number;
+    eval_duration: number;
+}
+
 export class OllamaProvider extends LLMProvider {
     readonly id = 'ollama';
     readonly name = 'Ollama (Local)';
@@ -52,7 +65,7 @@ export class OllamaProvider extends LLMProvider {
                 throw new Error(`Ollama Error ${response.status}: ${errorText}`);
             }
 
-            const data = await response.json() as any;
+            const data = await response.json() as unknown as OllamaResponse;
 
             // Approximate token count (Ollama returns stats usually)
             const inputTokens = data.prompt_eval_count || params.prompt.length / 4;

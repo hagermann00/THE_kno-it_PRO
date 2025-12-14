@@ -7,18 +7,18 @@
 
 import OpenAI from 'openai';
 import { LLMProvider } from './LLMProvider.js';
-import { TextGenParams, TextGenResult, ModelCapability } from '../core/types.js';
+import { TextGenParams, TextGenResult, ModelCapability, ProviderID } from '../core/types.js';
 import { modelRegistry } from '../core/ModelRegistry.js';
 
 export class OpenAIProvider extends LLMProvider {
-    readonly id = 'openai' as const;
-    readonly name = 'OpenAI';
+    readonly id: ProviderID = 'openai';
+    readonly name: string = 'OpenAI';
 
     private client: OpenAI;
 
-    constructor(apiKey: string) {
+    constructor(apiKey: string, baseUrl?: string) {
         super();
-        this.client = new OpenAI({ apiKey });
+        this.client = new OpenAI({ apiKey, baseURL: baseUrl });
     }
 
     supports(capability: ModelCapability): boolean {
@@ -75,7 +75,7 @@ export class OpenAIProvider extends LLMProvider {
                     function: {
                         name: tool.name,
                         description: tool.description,
-                        parameters: tool.parameters
+                        parameters: tool.parameters as Record<string, unknown>
                     }
                 }));
             }
@@ -92,8 +92,8 @@ export class OpenAIProvider extends LLMProvider {
                 text = message.content;
             } else if (Array.isArray(message.content)) {
                 // Handle structured content (for vision models)
-                text = message.content
-                    .map(part => {
+                text = (message.content as any[])
+                    .map((part: any) => {
                         if ('type' in part && part.type === 'text' && 'text' in part) {
                             return part.text;
                         }

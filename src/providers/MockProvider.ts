@@ -9,12 +9,12 @@ import { TextGenParams, TextGenResult, ModelCapability } from '../core/types.js'
 import { modelRegistry } from '../core/ModelRegistry.js';
 
 export class MockProvider extends LLMProvider {
-    readonly id = 'gemini'; // Masquerade as Gemini (or others) to satisfy registry lookups
+    readonly id: ProviderID = 'gemini'; // Default
     readonly name = 'Kno-It Simulator';
 
     constructor(private simulatedProviderId: 'gemini' | 'openai' | 'anthropic' | 'deepseek') {
         super();
-        this.id = simulatedProviderId as any;
+        this.id = simulatedProviderId;
     }
 
     supports(capability: ModelCapability): boolean {

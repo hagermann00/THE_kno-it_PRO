@@ -6,7 +6,11 @@
 // Core types
 export * from './core/types.js';
 
+// Core types
+export * from './core/types.js';
+
 // Model registry
+import { modelRegistry } from './core/ModelRegistry.js';
 export { modelRegistry, CLAUDE_MODELS, OPENAI_MODELS, GEMINI_MODELS, DEEPSEEK_MODELS, OLLAMA_MODELS } from './core/ModelRegistry.js';
 
 // Provider registry

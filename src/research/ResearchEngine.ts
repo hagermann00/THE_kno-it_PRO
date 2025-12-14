@@ -298,7 +298,7 @@ Your task: Synthesize the above into key facts, noting areas of agreement and di
             return 'No consensus reached. Models provided divergent responses.';
         }
 
-        const topFacts = consensus.items.slice(0, 3).map(item => item.value).join('. ');
+        const topFacts = consensus.items.slice(0, 3).map((item: any) => item.value).join('. ');
 
         const varianceNote = variance.level === 'high'
             ? ' Note: High variance detected - answer may be context-dependent.'
