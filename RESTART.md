@@ -1,49 +1,24 @@
 # Kno-It Restart Context
-**Version:** v0.2.0 "Dynamic Simulation"
-**Last Updated:** 2025-12-13
-**Status:** PRODUCTION READY (Local)
+**Version:** v0.2.1 "Dynamic & Auto-Healing"
+**Last Updated:** Dec 14, 2025 (03:00 AM CST)
+**Status:** STABLE
 
 ---
 
 ## 🚀 Quick Start
-1. **Start Backend API:**
-   ```bash
-   npm run server
-   ```
-2. **Start Dashboard (New Terminal):**
-   ```bash
-   cd dashboard
-   npm run dev
-   ```
+1. **Start Backend API:** (`npm run server`) - Serves the engine at `localhost:3000`
+2. **Start Dashboard:** (`cd dashboard && npm run dev`) - UI at `localhost:5173`
 
-## 🛠️ System State
+## 💎 Key Capabilities (New)
+- **Auto-Replace:** If a provider fails (402 Payment / 429 Rate Limit), the engine automatically swaps in a backup provider (Gemini/Groq/OpenAI) to complete the squad.
+- **Strict Typing:** The codebase is now TypeScript strict. No `as any` hacks.
+- **Trust Score:** Every result has a `score` (0-100) and `variance` analysis.
 
-### 1. New Features (v0.2.0)
-- **Dynamic Squads:** Boardroom, FutureCast, Yes/No/Maybe, Competency, Generational.
-- **Trust Scoring:** Automated 0-100% confidence rating based on consensus math.
-- **Audit Cache:** Passive SQL infrastructure to store external fact checks (cost optimization).
-- **Command Center:** React + Tailwind UI with "Savage Mode" theme.
-- **Backend API:** Express server at `localhost:3000/api/research`.
+## 🛠️ Debugging
+- Logs are in `data/research.db` (SQLite).
+- To test CLI without UI: `npm run demo "Your Query"`
+- To run completely free: set `USE_MOCK=true` in `.env` OR only provide Gemini/Groq keys.
 
-### 2. Core Components
-- **ConsensusEngine:** Calculates score, variances, and contradictions.
-- **ResearchEngine:** Orchestrates multi-model workflows.
-- **StorageEngine:** Logs all runs with `persona` context for future evaluation.
-- **PersonaRegistry:** Defines all System Prompts for Squads.
-
-### 3. Immediate Next Steps (Phase 3)
-1. **Feature Flag: Perplexity Sonar Pro:** Implement `ExternalAuditor` to use the `audit_cache`.
-2. **Eval UI:** Build a page to view past logs and manually grade them (for KB tuning).
-
-## ⚠️ Critical Files
-- `src/core/PersonaRegistry.ts`: Logic for Squads/Roles.
-- `src/research/ConsensusEngine.ts`: Logic for Trust Scoring.
-- `src/core/StorageEngine.ts`: Logic for Logging & Caching.
-- `KB_AUDIT_STRATEGY.md`: Strategy for cost-effective fact checking.
-
-## 🔐 Credentials
-- `.env` must be present (not in git).
-- API Keys required: Gemini (free), others optional.
-
----
-**Agent Instruction:** Use `KB_AUDIT_STRATEGY.md` when implementing the external audit feature.
+## ⚠️ Known Config Notes
+- `.env` requires valid keys for the models requested.
+- If `gpt-4o` is requested but key is broke, it WILL fallback to Gemini/Groq automatically now.

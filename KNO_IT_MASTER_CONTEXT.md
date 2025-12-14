@@ -1,7 +1,23 @@
 # KNO-IT: The Savage Knowledge Engine
 **Master Context & Architecture Document**
-**Date:** December 13, 2024
-**Status:** Active Development (Phase 2: Intelligence Expansion)
+
+## 2. Project Status
+**Current Version:** v0.2.1 "Dynamic Simulation & Auto-Healing"
+**Date:** December 14, 2025
+**Status:** PRODUCTION READY (Core Logic Complete)
+
+### Recent Accomplishments (v0.2.x)
+- [x] **Dynamic Squads:** "The Boardroom", "FutureCast", "Debate" modes.
+- [x] **Trust Architecture:** Automated 0-100% confidence scoring based on math.
+- [x] **Audit Cache:** Infrastructure for "Lazy" Perplexity Fact Checks.
+- [x] **Auto-Healing:** Automatically replaces failed/broke agents with backup providers during runtime.
+- [x] **Type Safety:** 100% Strict Typing (Removed all `as any` technical debt).
+- [x] **Command Center:** React Dashboard with "Savage Mode" UI.
+
+### Immediate Next Steps (Phase 3)
+1. **Eval UI:** Build evaluation dashboard to view logs and perform manual grading.
+2. **External Audit:** Wire up Perplexity Sonar Pro to the Audit Cache.
+3. **Knowledge Base:** Vectorize verified claims for long-term memory.
 
 ---
 
