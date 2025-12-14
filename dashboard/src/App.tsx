@@ -15,14 +15,6 @@ import {
 // Types aligning with backend
 type ResearchDepth = 'flash' | 'budget' | 'quick' | 'standard' | 'verified' | 'deep-dive';
 
-interface ResearchRequest {
-  topic: string;
-  config: {
-    depth: ResearchDepth;
-    primaryModel: string;
-  }
-}
-
 interface ResearchResult {
   topic: string;
   summary: string;
@@ -128,32 +120,63 @@ function App() {
         <section className="bg-savage-panel border border-savage-border rounded-xl p-1 shadow-2xl overflow-hidden">
           <div className="bg-savage-dark/50 p-6 space-y-6">
 
-            {/* PERSONA SELECTOR */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-savage-muted uppercase tracking-wider">Strategic Persona</label>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                {[
-                  { id: 'analyst', label: 'Analyst', icon: Brain },
-                  { id: 'cfo', label: 'CFO (Risk)', icon: Activity },
-                  { id: 'cto', label: 'CTO (Tech)', icon: Cpu },
-                  { id: 'devils_advocate', label: 'Devil\'s Adv.', icon: AlertTriangle },
-                  { id: 'savage', label: 'SAVAGE', icon: Zap }
-                ].map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => setPersona(p.id)}
-                    className={`flex items-center justify-center gap-2 p-3 rounded-lg border text-sm font-medium transition-all ${persona === p.id
-                        ? p.id === 'savage'
-                          ? 'bg-red-600 border-red-500 text-white shadow-lg shadow-red-900/50'
-                          : 'bg-savage-accent border-blue-400 text-white shadow-lg shadow-blue-900/50'
-                        : 'bg-savage-dark border-savage-border text-savage-muted hover:bg-white/5 hover:text-white'
-                      }`}
-                  >
-                    <p.icon className="w-4 h-4" />
-                    {p.label}
-                  </button>
-                ))}
+            {/* STRATEGIC MODE SELECTOR */}
+            <div className="space-y-4">
+
+              {/* Single Personas */}
+              <div>
+                <label className="text-xs font-bold text-savage-muted uppercase tracking-wider mb-2 block">Single Lens (Apply to All)</label>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                  {[
+                    { id: 'analyst', label: 'Analyst', icon: Brain },
+                    { id: 'cfo', label: 'CFO (Risk)', icon: Activity },
+                    { id: 'cto', label: 'CTO (Tech)', icon: Cpu },
+                    { id: 'devils_advocate', label: 'Devil\'s Adv.', icon: AlertTriangle },
+                    { id: 'savage', label: 'SAVAGE', icon: Zap }
+                  ].map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => setPersona(p.id)}
+                      className={`flex items-center justify-center gap-2 p-3 rounded-lg border text-sm font-medium transition-all ${persona === p.id
+                          ? p.id === 'savage'
+                            ? 'bg-red-600 border-red-500 text-white shadow-lg shadow-red-900/50'
+                            : 'bg-savage-accent border-blue-400 text-white shadow-lg shadow-blue-900/50'
+                          : 'bg-savage-dark border-savage-border text-savage-muted hover:bg-white/5 hover:text-white'
+                        }`}
+                    >
+                      <p.icon className="w-4 h-4" />
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
               </div>
+
+              {/* Squad Simulations */}
+              <div>
+                <label className="text-xs font-bold text-savage-muted uppercase tracking-wider mb-2 block">Dynamic Simulation (Multi-Model Squads)</label>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                  {[
+                    { id: 'boardroom', label: 'The Boardroom', icon: Layers },
+                    { id: 'yes_no_maybe', label: 'Yes/No/Maybe', icon: Terminal },
+                    { id: 'futurecast', label: '[FutureCast]', icon: Activity },
+                    { id: 'competency', label: 'Competency', icon: Cpu },
+                    { id: 'generational', label: 'Generational', icon: Brain }
+                  ].map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => setPersona(p.id)}
+                      className={`flex items-center justify-center gap-2 p-3 rounded-lg border text-sm font-medium transition-all ${persona === p.id
+                          ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-900/50'
+                          : 'bg-savage-dark border-savage-border text-savage-muted hover:bg-white/5 hover:text-white'
+                        }`}
+                    >
+                      <p.icon className="w-4 h-4" />
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
             </div>
 
             {/* Model & Depth Config */}
@@ -164,8 +187,8 @@ function App() {
                     key={d}
                     onClick={() => setDepth(d as ResearchDepth)}
                     className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${depth === d
-                      ? 'bg-savage-accent text-white shadow-lg shadow-savage-accent/20'
-                      : 'text-savage-muted hover:text-white hover:bg-white/5'
+                        ? 'bg-savage-accent text-white shadow-lg shadow-savage-accent/20'
+                        : 'text-savage-muted hover:text-white hover:bg-white/5'
                       }`}
                   >
                     {d.toUpperCase()}
