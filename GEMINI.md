@@ -76,6 +76,19 @@ GROQ_API_KEY=your-key
 - Never delete `data/*.db` without explicit user approval
 - Never auto-run expensive models (o3, Claude Opus) without confirmation
 
+### 🚫 BUDGET SAFEGUARDS (Hard Deny):
+- **NO Image Generation**: Never call Imagen, DALL-E, or any image-generating API
+- **NO Video Generation**: Never call Veo, Sora, or any video-generating API
+- **NO Audio TTS**: Never call TTS APIs (reserve for future `speak-it` project)
+
+### ✅ ALLOWED (Zero Cost):
+- Output image prompts as text (for external generation)
+- Include links to existing web images
+- Describe visual concepts in text form
+
+> **Future Project:** `img-it` will be a separate multi-provider image generator wrapper.
+> Kno-It stays text-only for budget control.
+
 ---
 
 ## Current Development Phase

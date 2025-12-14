@@ -89,7 +89,7 @@ export interface ToolCall {
 // Research Types
 // ============================================================================
 
-export type ResearchDepth = 'flash' | 'budget' | 'quick' | 'standard' | 'verified' | 'deep-dive';
+export type ResearchDepth = 'flash' | 'budget' | 'quick' | 'standard' | 'verified' | 'deep-dive' | 'y-it';
 
 export interface ResearchConfig {
     depth: ResearchDepth;

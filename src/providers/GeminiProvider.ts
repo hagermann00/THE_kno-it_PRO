@@ -37,7 +37,6 @@ export class GeminiProvider extends LLMProvider {
             const modelDef = modelRegistry.get(modelId);
 
             // INTERNAL-TO-EXTERNAL MODEL MAPPING
-            // INTERNAL-TO-EXTERNAL MODEL MAPPING
             // We pin generic names to specific versions (2025 Standard)
             let actualModelId = modelId;
 
@@ -128,5 +127,15 @@ export class GeminiProvider extends LLMProvider {
                 costEstimate
             };
         });
+    }
+
+    /**
+     * Generate embeddings for text
+     * Uses text-embedding-004
+     */
+    async getEmbedding(text: string): Promise<number[]> {
+        const model = this.client.getGenerativeModel({ model: "text-embedding-004" });
+        const result = await model.embedContent(text);
+        return result.embedding.values;
     }
 }

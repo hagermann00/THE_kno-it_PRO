@@ -4,7 +4,7 @@
  */
 
 import Database from 'better-sqlite3';
-import { DB_CONFIG } from './storageConfig.js';
+import { DB_CONFIG, LOCAL_STORAGE_PATH } from './storageConfig.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -65,9 +65,66 @@ export class StorageEngine {
         } catch (e) {
             // Column likely already exists
         }
+
+        // Migration: Add 'vector' column for semantic caching
+        try {
+            this.db.prepare("ALTER TABLE research_logs ADD COLUMN vector TEXT").run(); // Stored as JSON array string
+        } catch (e) {
+            // Column likely already exists
+        }
+    }
+
+    // --- Private Math Helpers ---
+
+    private cosineSimilarity(vecA: number[], vecB: number[]): number {
+        const dotProduct = vecA.reduce((sum, a, i) => sum + a * vecB[i], 0);
+        const magnitudeA = Math.sqrt(vecA.reduce((sum, a) => sum + a * a, 0));
+        const magnitudeB = Math.sqrt(vecB.reduce((sum, b) => sum + b * b, 0));
+        return dotProduct / (magnitudeA * magnitudeB);
     }
 
     // --- Public Methods ---
+
+    /**
+     * Semantic Cache Lookup
+     * Finds previous research with high semantic similarity
+     * @param embedding The vector of the current topic
+     * @param threshold Similarity threshold (0.0 - 1.0)
+     */
+    checkSemanticCache(embedding: number[], threshold: number = 0.92): any | null {
+        // Fetch all logs that have vectors
+        const stmt = this.db.prepare('SELECT * FROM research_logs WHERE vector IS NOT NULL');
+        const rows = stmt.all() as any[];
+
+        let bestMatch = null;
+        let bestScore = -1;
+
+        for (const row of rows) {
+            try {
+                const vector = JSON.parse(row.vector);
+                if (Array.isArray(vector) && vector.length === embedding.length) {
+                    const score = this.cosineSimilarity(embedding, vector);
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestMatch = row;
+                    }
+                }
+            } catch (e) {
+                // Invalid vector data, ignore
+            }
+        }
+
+        if (bestScore >= threshold) {
+            console.log(`[StorageEngine] Semantic Cache HIT! Score: ${bestScore.toFixed(4)} for "${bestMatch.topic}"`);
+            return {
+                ...JSON.parse(bestMatch.full_json),
+                cacheHit: true,
+                similarityScore: bestScore
+            };
+        }
+
+        return null;
+    }
 
     /**
      * Check if a claim has already been audited externally
@@ -96,10 +153,10 @@ export class StorageEngine {
         stmt.run(hash, text, verdict, url, now, expires);
     }
 
-    logResearch(topic: string, result: any) {
+    logResearch(topic: string, result: any, vector?: number[]) {
         const stmt = this.db.prepare(`
-            INSERT INTO research_logs (topic, depth, persona, summary, full_json, timestamp)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO research_logs (topic, depth, persona, summary, full_json, timestamp, vector)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         `);
         stmt.run(
             topic,
@@ -107,8 +164,15 @@ export class StorageEngine {
             result.metadata?.persona || 'analyst', // Capture Persona
             result.summary,
             JSON.stringify(result),
-            Date.now()
+            Date.now(),
+            vector ? JSON.stringify(vector) : null
         );
+
+        // Save Future-Proofed Artifact
+        this.saveResearchArtifact(topic, result, vector);
+
+        // Trigger Backup
+        this.backupToCloud();
     }
 
     logKnowledge(content: string, source: string) {
@@ -150,6 +214,62 @@ export class StorageEngine {
                 console.error(`[StorageEngine] ❌ specific sync failed for ${syncPath}:`, error);
             }
         }
+    }
+
+    /**
+     * Future-Proofing: Save readable/indexable Markdown artifact for "kb-it"
+     */
+    saveResearchArtifact(topic: string, result: any, vector?: number[]) {
+        const sanitizedTopic = topic.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        const date = new Date().toISOString().split('T')[0];
+        const filename = `${date}_${sanitizedTopic}.md`;
+
+        // YAML Frontmatter for future RAG ingestion
+        const frontmatter = [
+            '---',
+            `topic: "${topic}"`,
+            `date: "${new Date().toISOString()}"`,
+            `depth: "${result.metadata.depth}"`,
+            `score: ${result.score}`,
+            `vector: ${vector ? JSON.stringify(vector) : '[]'}`,
+            '---',
+            ''
+        ].join('\n');
+
+        const content = frontmatter + result.summary + '\n\n' + JSON.stringify(result.confirmed, null, 2);
+
+        for (const syncPath of DB_CONFIG.syncLocations) {
+            try {
+                // Save to 'artifacts' subfolder for clean organization
+                const artifactPath = path.join(syncPath, 'artifacts');
+                if (!fs.existsSync(artifactPath)) fs.mkdirSync(artifactPath, { recursive: true });
+
+                fs.writeFileSync(path.join(artifactPath, filename), content);
+                console.log(`[StorageEngine] 📄 Artifact saved: ${filename}`);
+            } catch (e) {
+                console.error(`[StorageEngine] Artifact save failed: ${e}`);
+            }
+        }
+    }
+
+    /**
+     * Clear the local working directory (scratchpad)
+     */
+    clearWorkingDir() {
+        const workingDir = path.join(LOCAL_STORAGE_PATH, 'working');
+        if (fs.existsSync(workingDir)) {
+            fs.rmSync(workingDir, { recursive: true, force: true });
+        }
+        fs.mkdirSync(workingDir, { recursive: true });
+    }
+
+    /**
+     * Save an intermediate step to the working directory
+     */
+    saveWorkingFile(filename: string, content: string) {
+        const workingDir = path.join(LOCAL_STORAGE_PATH, 'working');
+        if (!fs.existsSync(workingDir)) fs.mkdirSync(workingDir, { recursive: true });
+        fs.writeFileSync(path.join(workingDir, filename), content);
     }
 }
 

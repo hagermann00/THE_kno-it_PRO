@@ -8,6 +8,7 @@
 ## 🚀 Quick Start
 1. **Start Backend API:** (`npm run server`) - Serves the engine at `localhost:3000`
 2. **Start Dashboard:** (`cd dashboard && npm run dev`) - UI at `localhost:5173`
+3. **Design Research:** (`npm run architect`) - Interactive Workflow Designer (New!)
 
 ## 💎 Key Capabilities (New)
 - **Auto-Replace:** If a provider fails (402 Payment / 429 Rate Limit), the engine automatically swaps in a backup provider (Gemini/Groq/OpenAI) to complete the squad.

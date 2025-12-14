@@ -30,7 +30,7 @@ export const DB_CONFIG = {
     // Backup/Sync locations
     syncLocations: [
         path.join(CLOUD_PATHS.oneDrive, 'kno-it-backups'),
-        // path.join(CLOUD_PATHS.googleDriveMain, 'kno-it-backups') // Uncomment if path verified
+        path.join(CLOUD_PATHS.googleDriveMain, 'kno-it-backups')
     ]
 };
 

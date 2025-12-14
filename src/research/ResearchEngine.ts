@@ -1,11 +1,13 @@
 /**
  * Research Engine
  * Multi-LLM research orchestrator with statistical analysis
+ * Now with intelligent grounding (Brave Search / Groq / Gemini)
  */
 
 import { providerRegistry } from '../core/ProviderRegistry.js';
 import { modelRegistry } from '../core/ModelRegistry.js';
 import { TextGenParams, TextGenResult, ResearchDepth, ResearchResult, ResearchConfig } from '../core/types.js';
+import { Y_IT_MASTER_PROTOCOL } from '../core/prompts.js';
 import { ConsensusEngine } from './ConsensusEngine.js';
 import { OutlierIsolator } from './OutlierIsolator.js';
 import { logger } from '../core/logger.js';
@@ -13,16 +15,20 @@ import { TopicSchema } from '../core/validation.js';
 import { StorageEngine } from '../core/StorageEngine.js';
 import { ResearchError } from '../core/errors.js';
 import { getPersona } from '../core/PersonaRegistry.js';
+import { groundingSwitchboard, GroundingDecision, GroundingProvider } from '../core/GroundingSwitchboard.js';
+import { createBraveSearchProvider, BraveSearchProvider } from '../providers/BraveSearchProvider.js';
 
 export class ResearchEngine {
     private consensusEngine: ConsensusEngine;
     private outlierIsolator: OutlierIsolator;
     private storage: StorageEngine;
+    private braveSearch: BraveSearchProvider | null;
 
     constructor(private config: ResearchConfig) {
         this.consensusEngine = new ConsensusEngine();
         this.outlierIsolator = new OutlierIsolator();
         this.storage = new StorageEngine();
+        this.braveSearch = createBraveSearchProvider();
     }
 
     /**
@@ -34,13 +40,78 @@ export class ResearchEngine {
 
         const startTime = Date.now();
 
+        // -------------------------------------------------------------------------
+        // SEMANTIC CACHE CHECK (Cost Saving)
+        // -------------------------------------------------------------------------
+        let topicVector: number[] | undefined;
+        try {
+            const gemini = providerRegistry.get('gemini') as any;
+            if (gemini && typeof gemini.getEmbedding === 'function') {
+                topicVector = await gemini.getEmbedding(validatedTopic);
+
+                if (topicVector) {
+                    const cached = this.storage.checkSemanticCache(topicVector, 0.92);
+
+                    if (cached) {
+                        logger.info('🎯 SEMANTIC CACHE HIT - Returning cached result', { topic: validatedTopic });
+                        return { ...cached, fromCache: true };
+                    }
+                }
+            }
+        } catch (e) {
+            logger.warn(`Semantic cache check failed: ${e}`);
+        }
+
+        // =====================================================================
+        // INTELLIGENT GROUNDING: Decide if we need web data
+        // =====================================================================
+        const groundingDecision = groundingSwitchboard.analyze(validatedTopic);
+        console.log('[DEBUG] Grounding Decision:', JSON.stringify(groundingDecision, null, 2));
+
+        let groundingContext = '';
+        let groundingProvider: GroundingProvider | null = null;
+
+        if (groundingDecision.shouldGround) {
+            // Select best available grounding provider
+            const availableProviders = {
+                groq: providerRegistry.has('groq'),
+                brave: this.braveSearch?.isConfigured() || false,
+                gemini: providerRegistry.has('gemini')
+            };
+            console.log('[DEBUG] Available Providers:', JSON.stringify(availableProviders, null, 2));
+
+            groundingProvider = groundingSwitchboard.selectProvider(availableProviders);
+            console.log('[DEBUG] Selected Provider:', JSON.stringify(groundingProvider, null, 2));
+
+            logger.info(`🌐 Grounding enabled`, {
+                reason: groundingDecision.reason,
+                provider: groundingProvider.id,
+                freshness: groundingDecision.suggestedFreshness
+            });
+
+            // Fetch grounding context (Brave Search only for now)
+            if (groundingProvider.id === 'brave' && this.braveSearch) {
+                try {
+                    groundingContext = await this.braveSearch.getGroundingContext(
+                        validatedTopic,
+                        3 // max results
+                    );
+                } catch (err) {
+                    logger.warn('Brave Search grounding failed', { error: err });
+                }
+            }
+            // TODO: Add Groq built-in search and Gemini grounding when available
+        } else {
+            logger.info(`⏭️ Grounding skipped`, { reason: groundingDecision.reason });
+        }
+
         // Select preset workflow
         const workflow = this.getWorkflow(this.config.depth);
 
         logger.info(`Starting ${this.config.depth} research`, { topic: validatedTopic });
 
-        // Execute workflow
-        const responses = await this.executeWorkflow(topic, workflow);
+        // Execute workflow (with optional grounding context)
+        const responses = await this.executeWorkflow(topic, workflow, groundingContext);
 
         // Detect and remove outliers
         const outlierReport = await this.outlierIsolator.analyze(responses);
@@ -128,8 +199,8 @@ export class ResearchEngine {
             outliers: outlierReport.outliers
         };
 
-        // Log to persistent storage
-        this.storage.logResearch(validatedTopic, result);
+        // Log to persistent storage (with vector for caching)
+        this.storage.logResearch(validatedTopic, result, topicVector);
 
         logger.info('Research complete', {
             cost: totalCost.toFixed(4),
@@ -187,6 +258,67 @@ export class ResearchEngine {
                 tieBreaker = 'o3';
                 break;
 
+            case 'y-it':
+                // The "Universal Fallback" Protocol with BUDGET AWARENESS
+                // Dynamically assigns roles based on what is available AND fits the budget.
+
+                // 1. Define ideal candidates for each role (Sorted by Quality Descending)
+                const candidates = {
+                    invA: ['gemini-2.5-flash', 'gpt-4o-mini', 'claude-3.5-haiku'],
+                    invB: ['llama-3.3-70b-versatile', 'llama-3.1-70b-versatile', 'mixtral-8x7b-32768', 'gpt-4o'], // Meta/Mistral preference
+                    gap: ['gemini-3.0-pro', 'gemini-2.5-pro', 'gpt-4o', 'deepseek-chat', 'gemini-2.5-flash'], // Fallback to Flash if Pro too expensive
+                    syn: ['gemini-3.0-pro', 'gemini-2.5-pro', 'claude-3.5-sonnet', 'gpt-4o', 'gemini-2.5-flash']
+                };
+
+                const budget = this.config.maxCost || 1.00; // Default $1.00 (plenty for pro)
+                let currentCostSoFar = 0;
+
+                // 2. Helper to find best available model that FITS BUDGET
+                const pick = (list: string[], fallback: string): string => {
+                    for (const m of list) {
+                        if (!providerRegistry.getProviderForModel(m)) continue;
+
+                        // Estimate cost for this agent (Assuming roughly 2k in, 1k out)
+                        const estimatedAgentCost = modelRegistry.estimateCost(m, 2000, 1000);
+
+                        if (currentCostSoFar + estimatedAgentCost <= budget) {
+                            return m;
+                        }
+                    }
+                    // If nothing fits budget, try to find ANY available model in list (cheapest first/last resort)
+                    // We assume list is Quality Descending. Cheapest is likely at end or we check specifically.
+                    // This is "Budget-First" so we default to Primary/Fallback if budget blown.
+                    for (const m of list.reverse()) {
+                        if (providerRegistry.getProviderForModel(m)) {
+                            // Force pick even if over budget? Or strict cap? 
+                            // "Throttle Mode" implies smart degradation.
+                            return m;
+                        }
+                    }
+                    return fallback;
+                };
+
+                // 3. Construct the team progressively cost-aware
+                const primary = this.config.primaryModel;
+
+                const invAId = pick(candidates.invA, primary);
+                currentCostSoFar += modelRegistry.estimateCost(invAId, 2000, 1000);
+
+                const invBId = pick(candidates.invB, primary);
+                currentCostSoFar += modelRegistry.estimateCost(invBId, 2000, 1000);
+
+                const gapId = pick(candidates.gap, primary);
+                currentCostSoFar += modelRegistry.estimateCost(gapId, 2000, 1000);
+
+                const synId = pick(candidates.syn, primary);
+
+                models = [invAId, invBId, gapId, synId];
+
+                passes = 2;
+                validateOutliers = true;
+                tieBreaker = models[3];
+                break;
+
             default:
                 models = [this.config.primaryModel];
         }
@@ -221,105 +353,128 @@ export class ResearchEngine {
 
     /**
      * Execute workflow
+     * @param groundingContext - Optional web context to inject into prompts
      */
-    private async executeWorkflow(topic: string, workflow: WorkflowConfig): Promise<TextGenResult[]> {
+    private async executeWorkflow(topic: string, workflow: WorkflowConfig, groundingContext: string = ''): Promise<TextGenResult[]> {
         const results: TextGenResult[] = [];
 
-        // Pass 1: Parallel research
-        console.log(`[ResearchEngine] Pass 1: ${workflow.models.length} models`);
+        // Pass 1: Parallel or Sequential Generation (based on strategy)
+        console.log(`[ResearchEngine] Pass 1: ${workflow.models.length - 1} models`);
+
+        const modelsToRun = workflow.models.slice(0, workflow.models.length - 1);
 
         // Get persona definition
         const persona = getPersona(this.config.persona || 'analyst');
 
-        const pass1Results = await Promise.all(
-            workflow.models.map(async (modelId) => {
+        // Helper to prepare params
+        const prepareParams = (modelId: string, index: number): TextGenParams => {
+            let specificFocus = '';
+            if (workflow.models.length > 2 && (topic.includes('Dropshipping') || this.config.depth === 'y-it')) {
+                if (index === 0) {
+                    specificFocus = '\n\nFOCUS ONLY ON SECTION 1 (THE CAST) AND SECTION 2 (THE MATRIX). Go deep on stories and statistics.';
+                } else if (index === 1) {
+                    specificFocus = '\n\nFOCUS ONLY ON SECTION 3 (THE TREASURY) AND SECTION 4 (EXECUTION DATA). Go deep on affiliate tools, costs, and ethical scores.';
+                } else if (index === 2) {
+                    specificFocus = '\n\nROLE: Gap Hunter / Devil\'s Advocate.\nTASK: Do NOT generate a standard report.\nINSTEAD: List the "Unknown Unknowns", the questions we aren\'t asking, and the contradictions in the standard narrative. Identify 3 critical blind spots.';
+                }
+            }
+
+
+
+            let baseParams = `Research the following topic thoroughly. Provide specific facts, data, and sources where possible:\n\n${topic}`;
+
+            if (this.config.depth === 'y-it') {
+                baseParams = Y_IT_MASTER_PROTOCOL.replace(/{{TOPIC}}/g, topic);
+            }
+
+            const researchPrompt = groundingContext
+                ? `${groundingContext}\n\nBased on the above web context and your knowledge, execute the following protocol:\n\n${baseParams}${specificFocus}`
+                : `${baseParams}${specificFocus}`;
+
+            return {
+                prompt: researchPrompt,
+                systemPrompt: persona.systemPrompt,
+                model: modelId,
+                maxTokens: 1000
+            };
+        };
+
+        if (this.config.depth === 'y-it') {
+            // SEQUENTIAL EXECUTION ("Stretched Out")
+            console.log('[ResearchEngine] Running agents sequentially to manage rate limits...');
+
+            for (let i = 0; i < modelsToRun.length; i++) {
+                const modelId = modelsToRun[i];
                 const provider = providerRegistry.getProviderForModel(modelId);
 
                 if (!provider) {
-                    logger.warn(`No provider for model: ${modelId}`);
-                    return null;
+                    console.warn(`[ResearchEngine] No provider for ${modelId}, skipping.`);
+                    continue;
                 }
 
-                const params: TextGenParams = {
-                    prompt: `Research the following topic thoroughly. Provide specific facts, data, and sources where possible:\n\n${topic}`,
-                    systemPrompt: persona.systemPrompt,
-                    model: modelId,
-                    maxTokens: 1000
-                };
+                try {
+                    console.log(`[ResearchEngine] Agent ${modelId} starting...`);
+                    const params = prepareParams(modelId, i);
+                    const result = await provider.generateText(params);
+                    results.push(result);
+                    console.log(`[ResearchEngine] Agent ${modelId} finished.`);
+                } catch (error) {
+                    console.error(`[ResearchEngine] Error with ${modelId}:`, error);
+                }
+
+                // The "Stretch" - Wait 5 seconds between agents to be safe vs 15/min limit
+                if (i < modelsToRun.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 5000));
+                }
+            }
+        } else {
+            // PARALLEL EXECUTION (Original Speed)
+            const promises = modelsToRun.map(async (modelId, index) => {
+                const provider = providerRegistry.getProviderForModel(modelId);
+                if (!provider) return null;
+
+                const params = prepareParams(modelId, index);
 
                 try {
                     return await provider.generateText(params);
-                } catch (error: any) {
-                    const msg = error?.message || String(error);
-                    if (msg.includes('credit') || msg.includes('balance') || msg.includes('quota') || msg.includes('402')) {
-                        logger.warn(`⚠️ [BILLING] Skipping ${modelId}: Insufficient funds/quota.`);
-                    } else if (msg.includes('rate limit') || msg.includes('429')) {
-                        logger.warn(`⚠️ [RATE LIMIT] Skipping ${modelId}: Too many requests.`);
-                    } else {
-                        logger.error(`[ResearchEngine] Error with ${modelId}:`, error);
-                    }
-
-                    // AUTO-SUBSTITUTION: Try to find a backup "chair" to fill the spot
-                    try {
-                        const allProviders = providerRegistry.listAvailable();
-                        // Simple fallback chain: Gemini -> Groq -> OpenAI -> Anthropic
-                        // We pick one that ISN'T the current provider
-                        const currentProviderId = provider.id;
-                        const backupProviderId = allProviders.find(p => p !== currentProviderId);
-
-                        if (backupProviderId) {
-                            const backupModel =
-                                backupProviderId === 'gemini' ? 'gemini-2.5-flash' :
-                                    backupProviderId === 'groq' ? 'llama3-70b-8192' :
-                                        backupProviderId === 'openai' ? 'gpt-4o-mini' :
-                                            'claude-3.5-haiku'; // anthropic default
-
-                            if (workflow.models.includes(backupModel)) {
-                                // Already in use, don't duplicate
-                                return null;
-                            }
-
-                            logger.info(`🔄 [AUTO-REPLACE] Substituting ${modelId} with ${backupModel} (${backupProviderId})`);
-
-                            const backupProvider = providerRegistry.get(backupProviderId);
-                            if (backupProvider) {
-                                return await backupProvider.generateText({
-                                    ...params,
-                                    model: backupModel
-                                });
-                            }
-                        }
-                    } catch (substitutionError) {
-                        logger.warn(`[Auto-Replace] Substitution failed: ${substitutionError}`);
-                    }
-
+                } catch (error) {
+                    console.error(`[ResearchEngine] Error with ${modelId}:`, error);
                     return null;
                 }
-            })
-        );
+            });
 
-        results.push(...pass1Results.filter((r): r is TextGenResult => r !== null));
+            const parallelResults = await Promise.all(promises);
+            parallelResults.forEach(r => { if (r) results.push(r); });
+        }
 
-        // Pass 2: Refinement (if deep-dive)
+
+        // Pass 2: Refinement (Synthesizer)
         if (workflow.passes > 1 && results.length > 0) {
             console.log(`[ResearchEngine] Pass 2: Refinement`);
 
             // Synthesize findings from pass 1
-            const synthesisPrompt = `
-Based on these research findings, provide a refined analysis:
+            // Determine synthesizer index (Last model in the list)
+            const synthesizerIndex = workflow.models.length - 1;
 
-${results.map(r => `[${r.model}]: ${r.text}`).join('\n\n---\n\n')}
+            const synthesisPersona = (workflow.models[synthesizerIndex] === 'gemini-2.5-flash' || workflow.models[synthesizerIndex] === 'gemini-2.5-pro' || workflow.models[synthesizerIndex] === 'gemini-3.0-pro') && this.config.depth === 'y-it'
+                ? getPersona('amalgamator')
+                : persona; // Default to original persona
 
-Your task: Synthesize the above into key facts, noting areas of agreement and disagreement.
-      `.trim();
+            const synthesisPrompt = this.config.depth === 'y-it'
+                ? `AMALGOMATE WITH REDUNREMOVE:\n\nGROUNDING CONTEXT (FACT CHECK):\n${groundingContext || 'No grounding data available.'}\n\nREPORTS:\n${results.map(r => `[REPORT ${r.model}]:\n${r.text}`).join('\n\n---\n\n')}\n\nTask: Fuse these into one Master File. Explicitly address the "Blind Spots" identified by the Gap Hunter. VERIFY claims against Grounding Context.`
+                : `Based on these research findings, provide a refined analysis:\n\n${results.map(r => `[${r.model}]: ${r.text}`).join('\n\n---\n\n')}\n\nYour task: Synthesize the above into key facts, noting areas of agreement and disagreement.`;
 
-            const synthesizer = providerRegistry.getProviderForModel(workflow.models[2]);
+            // Safety check: specific synthesizer or fallback to first model
+            const synthesizerId = workflow.models[synthesizerIndex] || workflow.models[0];
+            const synthesizer = providerRegistry.getProviderForModel(synthesizerId);
+
             if (synthesizer) {
                 try {
                     const refined = await synthesizer.generateText({
                         prompt: synthesisPrompt,
-                        model: workflow.models[2],
-                        maxTokens: 1500
+                        systemPrompt: synthesisPersona.systemPrompt, // Use Amalgamator prompt here
+                        model: synthesizerId,
+                        maxTokens: 2000
                     });
 
                     results.push(refined);
