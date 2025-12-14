@@ -47,6 +47,16 @@ export class StorageEngine {
                 verdict TEXT, -- 'hallucination', 'alpha', 'unknown'
                 timestamp INTEGER
             );
+
+            -- Audit Cache for External Fact Checks (Cost Optimization)
+            CREATE TABLE IF NOT EXISTS audit_cache (
+                claim_hash TEXT PRIMARY KEY,
+                claim_text TEXT,
+                verdict TEXT,      -- 'verified', 'debunked', 'nuanced'
+                citation_url TEXT,
+                timestamp INTEGER,
+                expires_at INTEGER 
+            );
         `);
 
         // Migration: Add 'persona' column if it doesn't exist
@@ -58,6 +68,33 @@ export class StorageEngine {
     }
 
     // --- Public Methods ---
+
+    /**
+     * Check if a claim has already been audited externally
+     * @param hash SHA256 hash of the claim text
+     */
+    checkAuditCache(hash: string): { verdict: string, citation_url: string } | null {
+        const stmt = this.db.prepare('SELECT verdict, citation_url, expires_at FROM audit_cache WHERE claim_hash = ?');
+        const result = stmt.get(hash) as any;
+
+        if (result && result.expires_at > Date.now()) {
+            return { verdict: result.verdict, citation_url: result.citation_url };
+        }
+        return null;
+    }
+
+    /**
+     * Save result from external audit (Perplexity/Sonar)
+     */
+    saveAuditResult(hash: string, text: string, verdict: string, url: string, ttlDays: number = 30) {
+        const stmt = this.db.prepare(`
+            INSERT OR REPLACE INTO audit_cache (claim_hash, claim_text, verdict, citation_url, timestamp, expires_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+        `);
+        const now = Date.now();
+        const expires = now + (ttlDays * 24 * 60 * 60 * 1000);
+        stmt.run(hash, text, verdict, url, now, expires);
+    }
 
     logResearch(topic: string, result: any) {
         const stmt = this.db.prepare(`
