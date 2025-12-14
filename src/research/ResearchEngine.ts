@@ -60,7 +60,7 @@ export class ResearchEngine {
         }
 
         // Calculate consensus
-        const modelResponses = validResponses.map(r => ({
+        const modelResponses = validResponses.map((r: TextGenResult) => ({
             model: r.model,
             text: r.text,
             confidence: r.costEstimate
@@ -249,8 +249,50 @@ export class ResearchEngine {
 
                 try {
                     return await provider.generateText(params);
-                } catch (error) {
-                    console.error(`[ResearchEngine] Error with ${modelId}:`, error);
+                } catch (error: any) {
+                    const msg = error?.message || String(error);
+                    if (msg.includes('credit') || msg.includes('balance') || msg.includes('quota') || msg.includes('402')) {
+                        logger.warn(`⚠️ [BILLING] Skipping ${modelId}: Insufficient funds/quota.`);
+                    } else if (msg.includes('rate limit') || msg.includes('429')) {
+                        logger.warn(`⚠️ [RATE LIMIT] Skipping ${modelId}: Too many requests.`);
+                    } else {
+                        logger.error(`[ResearchEngine] Error with ${modelId}:`, error);
+                    }
+
+                    // AUTO-SUBSTITUTION: Try to find a backup "chair" to fill the spot
+                    try {
+                        const allProviders = providerRegistry.listAvailable();
+                        // Simple fallback chain: Gemini -> Groq -> OpenAI -> Anthropic
+                        // We pick one that ISN'T the current provider
+                        const currentProviderId = provider.id;
+                        const backupProviderId = allProviders.find(p => p !== currentProviderId);
+
+                        if (backupProviderId) {
+                            const backupModel =
+                                backupProviderId === 'gemini' ? 'gemini-2.5-flash' :
+                                    backupProviderId === 'groq' ? 'llama3-70b-8192' :
+                                        backupProviderId === 'openai' ? 'gpt-4o-mini' :
+                                            'claude-3.5-haiku'; // anthropic default
+
+                            if (workflow.models.includes(backupModel)) {
+                                // Already in use, don't duplicate
+                                return null;
+                            }
+
+                            logger.info(`🔄 [AUTO-REPLACE] Substituting ${modelId} with ${backupModel} (${backupProviderId})`);
+
+                            const backupProvider = providerRegistry.get(backupProviderId);
+                            if (backupProvider) {
+                                return await backupProvider.generateText({
+                                    ...params,
+                                    model: backupModel
+                                });
+                            }
+                        }
+                    } catch (substitutionError) {
+                        logger.warn(`[Auto-Replace] Substitution failed: ${substitutionError}`);
+                    }
+
                     return null;
                 }
             })
