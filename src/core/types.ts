@@ -98,6 +98,7 @@ export interface ResearchConfig {
     secondaryModels?: string[];
     enableMCP?: boolean;
     maxCost?: number;
+    persona?: string;
 }
 
 export interface ResearchFact {

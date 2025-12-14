@@ -59,6 +59,7 @@ function App() {
   const [result, setResult] = useState<ResearchResult | null>(null);
   const [depth, setDepth] = useState<ResearchDepth>('standard');
   const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash');
+  const [persona, setPersona] = useState('analyst');
   const [error, setError] = useState<string | null>(null);
 
   const handleSearch = async () => {
@@ -77,7 +78,8 @@ function App() {
           topic,
           config: {
             depth,
-            primaryModel: selectedModel
+            primaryModel: selectedModel,
+            persona
           }
         })
       });
@@ -126,16 +128,44 @@ function App() {
         <section className="bg-savage-panel border border-savage-border rounded-xl p-1 shadow-2xl overflow-hidden">
           <div className="bg-savage-dark/50 p-6 space-y-6">
 
+            {/* PERSONA SELECTOR */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-savage-muted uppercase tracking-wider">Strategic Persona</label>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                {[
+                  { id: 'analyst', label: 'Analyst', icon: Brain },
+                  { id: 'cfo', label: 'CFO (Risk)', icon: Activity },
+                  { id: 'cto', label: 'CTO (Tech)', icon: Cpu },
+                  { id: 'devils_advocate', label: 'Devil\'s Adv.', icon: AlertTriangle },
+                  { id: 'savage', label: 'SAVAGE', icon: Zap }
+                ].map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => setPersona(p.id)}
+                    className={`flex items-center justify-center gap-2 p-3 rounded-lg border text-sm font-medium transition-all ${persona === p.id
+                        ? p.id === 'savage'
+                          ? 'bg-red-600 border-red-500 text-white shadow-lg shadow-red-900/50'
+                          : 'bg-savage-accent border-blue-400 text-white shadow-lg shadow-blue-900/50'
+                        : 'bg-savage-dark border-savage-border text-savage-muted hover:bg-white/5 hover:text-white'
+                      }`}
+                  >
+                    <p.icon className="w-4 h-4" />
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Model & Depth Config */}
-            <div className="flex flex-wrap gap-4 items-center justify-between">
+            <div className="flex flex-wrap gap-4 items-center justify-between pt-4 border-t border-savage-border/50">
               <div className="flex gap-2 p-1 bg-savage-dark/80 rounded-lg border border-savage-border">
                 {['flash', 'standard', 'deep-dive'].map((d) => (
                   <button
                     key={d}
                     onClick={() => setDepth(d as ResearchDepth)}
                     className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${depth === d
-                        ? 'bg-savage-accent text-white shadow-lg shadow-savage-accent/20'
-                        : 'text-savage-muted hover:text-white hover:bg-white/5'
+                      ? 'bg-savage-accent text-white shadow-lg shadow-savage-accent/20'
+                      : 'text-savage-muted hover:text-white hover:bg-white/5'
                       }`}
                   >
                     {d.toUpperCase()}

@@ -12,6 +12,7 @@ import { logger } from '../core/logger.js';
 import { TopicSchema } from '../core/validation.js';
 import { StorageEngine } from '../core/StorageEngine.js';
 import { ResearchError } from '../core/errors.js';
+import { getPersona } from '../core/PersonaRegistry.js';
 
 export class ResearchEngine {
     private consensusEngine: ConsensusEngine;
@@ -224,18 +225,21 @@ export class ResearchEngine {
         // Pass 1: Parallel research
         console.log(`[ResearchEngine] Pass 1: ${workflow.models.length} models`);
 
+        // Get persona definition
+        const persona = getPersona(this.config.persona || 'analyst');
+
         const pass1Results = await Promise.all(
             workflow.models.map(async (modelId) => {
                 const provider = providerRegistry.getProviderForModel(modelId);
 
                 if (!provider) {
-                    console.warn(`[ResearchEngine] No provider for model: ${modelId}`);
+                    logger.warn(`No provider for model: ${modelId}`);
                     return null;
                 }
 
                 const params: TextGenParams = {
                     prompt: `Research the following topic thoroughly. Provide specific facts, data, and sources where possible:\n\n${topic}`,
-                    systemPrompt: 'You are a research assistant. Provide accurate, well-sourced information. If you\'re uncertain, say so.',
+                    systemPrompt: persona.systemPrompt,
                     model: modelId,
                     maxTokens: 1000
                 };
