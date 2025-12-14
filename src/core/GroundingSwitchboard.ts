@@ -190,23 +190,23 @@ export class GroundingSwitchboard {
         brave?: boolean;     // Has Brave Search API key
         gemini?: boolean;    // Has Gemini with grounding enabled
     }): GroundingProvider {
-        // Priority 1: Groq built-in (free with inference)
-        if (availableProviders.groq) {
-            return {
-                id: 'groq',
-                name: 'Groq Built-in Web Search',
-                cost: 'free',
-                reason: 'Included with Groq inference'
-            };
-        }
-
-        // Priority 2: Brave Search (cheaper after free tier)
+        // Priority 1: Brave Search (Independent, high quality)
         if (availableProviders.brave) {
             return {
                 id: 'brave',
                 name: 'Brave Search API',
                 cost: '2K free/mo, then $5/1K',
                 reason: 'Independent index, privacy-focused'
+            };
+        }
+
+        // Priority 2: Groq (if applicable)
+        if (availableProviders.groq) {
+            return {
+                id: 'groq',
+                name: 'Groq Built-in Web Search',
+                cost: 'free',
+                reason: 'Included with Groq inference'
             };
         }
 
