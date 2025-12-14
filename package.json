@@ -8,6 +8,7 @@
     "scripts": {
         "dev": "tsx watch src/index.ts",
         "demo": "tsx src/demo.ts",
+        "server": "tsx src/server.ts",
         "build": "tsc",
         "test": "vitest",
         "lint": "eslint src/"
@@ -27,9 +28,13 @@
         "@anthropic-ai/sdk": "^0.30.0",
         "@google/generative-ai": "^0.24.1",
         "@types/better-sqlite3": "^7.6.13",
+        "@types/cors": "^2.8.19",
+        "@types/express": "^5.0.6",
         "better-sqlite3": "^12.5.0",
         "bottleneck": "^2.19.5",
+        "cors": "^2.8.5",
         "dotenv": "^17.2.3",
+        "express": "^5.2.1",
         "openai": "^4.0.0",
         "winston": "^3.19.0",
         "zod": "^3.23.0"
