@@ -8,26 +8,35 @@ import { modelRegistry } from '../core/ModelRegistry.js';
 import { TextGenParams, TextGenResult, ResearchDepth, ResearchResult, ResearchConfig } from '../core/types.js';
 import { ConsensusEngine } from './ConsensusEngine.js';
 import { OutlierIsolator } from './OutlierIsolator.js';
+import { logger } from '../core/logger.js';
+import { TopicSchema } from '../core/validation.js';
+import { StorageEngine } from '../core/StorageEngine.js';
+import { ResearchError } from '../core/errors.js';
 
 export class ResearchEngine {
     private consensusEngine: ConsensusEngine;
     private outlierIsolator: OutlierIsolator;
+    private storage: StorageEngine;
 
     constructor(private config: ResearchConfig) {
         this.consensusEngine = new ConsensusEngine();
         this.outlierIsolator = new OutlierIsolator();
+        this.storage = new StorageEngine();
     }
 
     /**
      * Main research entry point
      */
     async investigate(topic: string): Promise<ResearchResult> {
+        // Validate input
+        const validatedTopic = TopicSchema.parse(topic);
+
         const startTime = Date.now();
 
         // Select preset workflow
         const workflow = this.getWorkflow(this.config.depth);
 
-        console.log(`[ResearchEngine] Starting ${this.config.depth} research on: "${topic}"`);
+        logger.info(`Starting ${this.config.depth} research`, { topic: validatedTopic });
 
         // Execute workflow
         const responses = await this.executeWorkflow(topic, workflow);
@@ -35,7 +44,7 @@ export class ResearchEngine {
         // Detect and remove outliers
         const outlierReport = await this.outlierIsolator.analyze(responses);
 
-        console.log(`[ResearchEngine] Found ${outlierReport.outliers.length} outliers`);
+        logger.info('Outlier detection complete', { count: outlierReport.outliers.length });
 
         // Get valid responses only
         let validResponses = responses.filter(r =>
@@ -45,7 +54,7 @@ export class ResearchEngine {
         // FALLBACK: If all responses were rejected (high disagreement), use ALL responses
         // This prevents the "Cannot calculate consensus from zero responses" crash
         if (validResponses.length === 0) {
-            console.warn('[ResearchEngine] ⚠️ All responses were outliers! Falling back to raw dataset.');
+            logger.warn('All responses were outliers, falling back to raw dataset');
             validResponses = responses;
         }
 
@@ -109,13 +118,20 @@ export class ResearchEngine {
                 total: totalCost
             },
 
-            // Additional metadata
+            // Additional metadata (extended - will be stripped from type but useful)
             variance,
             derivatives,
             outliers: outlierReport.outliers
         };
 
-        console.log(`[ResearchEngine] Complete. Cost: $${totalCost.toFixed(4)}, Time: ${duration}ms`);
+        // Log to persistent storage
+        this.storage.logResearch(validatedTopic, result);
+
+        logger.info('Research complete', {
+            cost: totalCost.toFixed(4),
+            duration: `${duration}ms`,
+            models: responses.length
+        });
 
         return result as any;
     }
