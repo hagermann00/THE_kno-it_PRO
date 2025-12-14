@@ -45,7 +45,7 @@ async function main() {
         groqKey: process.env.GROQ_API_KEY
     });
 
-    providerRegistry.initialize(config as any);
+    providerRegistry.initialize(config);
 
     const availableProviders = providerRegistry.listAvailable();
 
@@ -102,9 +102,9 @@ async function main() {
             console.log();
         }
 
-        if ((result as any).derivatives?.length > 0) {
+        if (result.derivatives && result.derivatives.length > 0) {
             console.log('🔬 META-INSIGHTS');
-            (result as any).derivatives.forEach((d: any, idx: number) => {
+            result.derivatives.forEach((d: any, idx: number) => {
                 console.log(`${idx + 1}. ${d.title}`);
                 console.log(`   ${d.message}`);
                 if (d.recommendation) {
