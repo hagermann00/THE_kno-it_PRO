@@ -48,16 +48,30 @@ export class StorageEngine {
                 timestamp INTEGER
             );
         `);
+
+        // Migration: Add 'persona' column if it doesn't exist
+        try {
+            this.db.prepare("ALTER TABLE research_logs ADD COLUMN persona TEXT").run();
+        } catch (e) {
+            // Column likely already exists
+        }
     }
 
     // --- Public Methods ---
 
     logResearch(topic: string, result: any) {
         const stmt = this.db.prepare(`
-            INSERT INTO research_logs (topic, depth, summary, full_json, timestamp)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO research_logs (topic, depth, persona, summary, full_json, timestamp)
+            VALUES (?, ?, ?, ?, ?, ?)
         `);
-        stmt.run(topic, result.metadata?.depth || 'unknown', result.summary, JSON.stringify(result), Date.now());
+        stmt.run(
+            topic,
+            result.metadata?.depth || 'unknown',
+            result.metadata?.persona || 'analyst', // Capture Persona
+            result.summary,
+            JSON.stringify(result),
+            Date.now()
+        );
     }
 
     logKnowledge(content: string, source: string) {

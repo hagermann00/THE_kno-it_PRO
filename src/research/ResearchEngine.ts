@@ -106,6 +106,7 @@ export class ResearchEngine {
 
             metadata: {
                 depth: this.config.depth,
+                persona: this.config.persona || 'analyst',
                 modelsUsed: responses.map(r => r.model),
                 totalQueries: responses.length,
                 duration

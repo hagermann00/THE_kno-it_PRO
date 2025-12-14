@@ -121,6 +121,7 @@ export interface ResearchResult {
 
     metadata: {
         depth: ResearchDepth;
+        persona?: string; // e.g. 'analyst', 'boardroom'
         modelsUsed: string[];
         totalQueries: number;
         duration: number;
