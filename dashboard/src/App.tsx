@@ -18,6 +18,7 @@ type ResearchDepth = 'flash' | 'budget' | 'quick' | 'standard' | 'verified' | 'd
 interface ResearchResult {
   topic: string;
   summary: string;
+  score: number; // Reliability Score
   confirmed: Array<{
     claim: string;
     confidence: 'high' | 'medium' | 'low';
@@ -262,8 +263,13 @@ function App() {
                 <div className="text-white font-mono font-bold">{result.metadata.modelsUsed.length}</div>
               </div>
               <div className="bg-savage-panel p-4 rounded-xl border border-savage-border">
-                <div className="text-savage-muted text-xs uppercase tracking-wider mb-1">Confidence</div>
-                <div className="text-yellow-400 font-bold">CALCULATING...</div>
+                <div className="text-savage-muted text-xs uppercase tracking-wider mb-1">System Trust Score</div>
+                <div className={`font-bold text-lg ${(result.score || 0) >= 80 ? 'text-green-400' :
+                    (result.score || 0) >= 50 ? 'text-yellow-400' :
+                      'text-red-400'
+                  }`}>
+                  {result.score || 0}%
+                </div>
               </div>
             </div>
 

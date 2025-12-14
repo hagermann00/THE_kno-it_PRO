@@ -69,6 +69,7 @@ export class ResearchEngine {
         const consensus = this.consensusEngine.calculateConsensus(modelResponses);
         const variance = this.consensusEngine.analyzeVariance(modelResponses, consensus);
         const derivatives = this.consensusEngine.deriveInsights(modelResponses, consensus, variance);
+        const score = this.consensusEngine.calculateSystemConfidence(consensus, variance);
 
         // Build result
         const duration = Date.now() - startTime;
@@ -77,6 +78,7 @@ export class ResearchEngine {
         const result: ResearchResult = {
             topic,
             summary: this.generateSummary(consensus, variance),
+            score,
 
             confirmed: consensus.items.map(item => ({
                 claim: item.value,

@@ -112,6 +112,7 @@ export interface ResearchFact {
 export interface ResearchResult {
     topic: string;
     summary: string;
+    score: number; // 0-100 Reliability Score
 
     confirmed: ResearchFact[];
     disputed: ResearchFact[];

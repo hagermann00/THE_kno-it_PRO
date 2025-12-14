@@ -185,6 +185,41 @@ export class ConsensusEngine {
     }
 
     /**
+     * Stage 4: SYSTEM CONFIDENCE - Calculate overall reliability score (0-100)
+     */
+    calculateSystemConfidence(consensus: Consensus, variance: Variance): number {
+        // Base score start
+        let score = 100;
+
+        // 1. Consensus Existence (Critical)
+        if (consensus.items.length === 0) {
+            // No shared facts found at all. High risk.
+            score -= 40;
+        }
+
+        // 2. Variance Penalty (Disagreements)
+        if (variance.level === 'high') score -= 25;
+        if (variance.level === 'medium') score -= 10;
+
+        // 3. Contradiction Penalty (Direct conflicts)
+        // Deduct 10 points per contradiction found
+        score -= (variance.contradictions.length * 10);
+
+        // 4. Average Agreement Strength
+        // How many models agreed on the consensus items?
+        // 1.0 = All models agreed on facts. 0.5 = Barely majority.
+        const avgClaimConfidence = consensus.items.reduce((acc, item) => acc + item.confidence, 0) / (consensus.items.length || 1);
+        score -= (1 - avgClaimConfidence) * 20;
+
+        // 5. Outlier/Unique Claim Penalty (Hallucination Risk)
+        // If there are many unique claims compared to consensus claims, strictly punish.
+        const noiseRatio = variance.unique.length / (consensus.items.length || 1);
+        if (noiseRatio > 2) score -= 15; // Too much noise
+
+        return Math.max(0, Math.min(100, Math.round(score)));
+    }
+
+    /**
      * Helper: Extract discrete claims from text
      */
     private extractClaims(responses: ModelResponse[]): Array<{ text: string; mentionedBy: string[] }> {
