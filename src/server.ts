@@ -3,6 +3,7 @@
  * Exposes the Research Engine via REST API for the Command Center
  */
 
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { ResearchEngine } from './research/ResearchEngine.js';

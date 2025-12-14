@@ -4,6 +4,9 @@
  */
 
 import { ProviderID, TextGenParams, TextGenResult, ModelCapability } from '../core/types.js';
+import { logger } from '../core/logger.js';
+import { getRateLimiter } from '../core/rateLimiter.js';
+import { TIMEOUTS } from '../core/constants.js';
 
 export abstract class LLMProvider {
     abstract readonly id: ProviderID;
@@ -11,7 +14,6 @@ export abstract class LLMProvider {
 
     /**
      * Generate text using this provider
-     * This is the only required method - all providers must implement text generation
      */
     abstract generateText(params: TextGenParams): Promise<TextGenResult>;
 
@@ -21,7 +23,7 @@ export abstract class LLMProvider {
     abstract supports(capability: ModelCapability): boolean;
 
     /**
-     * Retry wrapper for API calls with exponential backoff
+     * Execute with Retry, Rate Limiting, and Timeout
      */
     protected async withRetry<T>(
         fn: () => Promise<T>,
@@ -29,26 +31,37 @@ export abstract class LLMProvider {
         baseDelay: number = 1000
     ): Promise<T> {
         let lastError: Error | undefined;
+        const limiter = getRateLimiter(this.id);
 
         for (let attempt = 0; attempt < maxRetries; attempt++) {
             try {
-                return await fn();
+                // Wrap in Rate Limiter + Timeout
+                return await limiter.schedule(async () => {
+                    const timeoutPromise = new Promise<never>((_, reject) =>
+                        setTimeout(() => reject(new Error(`Request timed out after ${TIMEOUTS.DEFAULT}ms`)), TIMEOUTS.DEFAULT)
+                    );
+
+                    return await Promise.race([fn(), timeoutPromise]);
+                });
             } catch (error) {
                 lastError = error as Error;
 
                 // Don't retry on certain errors
                 if (this.isNonRetryableError(error)) {
+                    logger.error(`[${this.id}] Non-retryable error`, { error: lastError.message });
                     throw error;
                 }
 
-                // Exponential backoff
+                // Log warning and wait
                 if (attempt < maxRetries - 1) {
                     const delay = baseDelay * Math.pow(2, attempt);
+                    logger.warn(`[${this.id}] Attempt ${attempt + 1} failed, retrying in ${delay}ms`, { error: lastError.message });
                     await new Promise(resolve => setTimeout(resolve, delay));
                 }
             }
         }
 
+        logger.error(`[${this.id}] All retries failed`, { error: lastError?.message });
         throw lastError;
     }
 
@@ -61,8 +74,8 @@ export abstract class LLMProvider {
             return true;
         }
 
-        // Invalid API key
-        if (error.message?.includes('API key') || error.message?.includes('authentication')) {
+        const msg = error.message?.toLowerCase() || '';
+        if (msg.includes('api key') || msg.includes('authentication') || msg.includes('unauthorized')) {
             return true;
         }
 
