@@ -151,15 +151,16 @@ export class ResearchEngine {
 
         switch (depth) {
             case 'flash':
-                models = ['gemini-2.5-flash-lite'];
+                models = ['llama-3.1-8b-instant', 'gemini-2.5-flash-lite'];
                 break;
 
             case 'budget':
-                models = ['deepseek-chat'];
+                // Prioritize Groq (Llama 3.1 8B) for ultra-low cost
+                models = ['llama-3.1-8b-instant', 'deepseek-chat'];
                 break;
 
             case 'quick':
-                models = ['gemini-2.5-flash'];
+                models = ['gemini-2.5-flash', 'llama-3.3-70b-versatile'];
                 break;
 
             case 'standard':
@@ -270,7 +271,7 @@ export class ResearchEngine {
                         if (backupProviderId) {
                             const backupModel =
                                 backupProviderId === 'gemini' ? 'gemini-2.5-flash' :
-                                    backupProviderId === 'groq' ? 'llama3-70b-8192' :
+                                    backupProviderId === 'groq' ? 'llama-3.1-8b-instant' :
                                         backupProviderId === 'openai' ? 'gpt-4o-mini' :
                                             'claude-3.5-haiku'; // anthropic default
 
