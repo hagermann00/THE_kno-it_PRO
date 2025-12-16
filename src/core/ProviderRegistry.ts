@@ -159,7 +159,7 @@ export class ProviderRegistry {
         if (modelId.startsWith('ollama')) {
             return this.providers.get('ollama');
         }
-        if (modelId.startsWith('llama') || modelId.startsWith('mixtral')) {
+    if (modelId.startsWith("llama") || modelId.startsWith("mixtral") || modelId.startsWith("gemma")) {
             return this.providers.get('groq');
         }
         if (modelId.includes('/') || modelId.startsWith('mistralai') || modelId.startsWith('microsoft')) {

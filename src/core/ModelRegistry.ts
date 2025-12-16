@@ -428,11 +428,41 @@ const HF_MODELS: ModelDefinition[] = [
 
 const GROQ_MODELS: ModelDefinition[] = [
     {
+        id: 'llama-3.3-70b-versatile',
+        provider: 'groq',
+        displayName: 'Llama 3.3 70B (Groq)',
+        pricing: {
+            inputPerMillion: 0.59,
+            outputPerMillion: 0.79,
+            lastUpdated: '2024-12-14'
+        },
+        capabilities: ['text-generation', 'json-mode', 'tool-calling', 'extended-thinking'],
+        contextWindow: 128000,
+        maxOutput: 32768,
+        speed: 'fast',
+        qualityTier: 5
+    },
+    {
+        id: 'llama-3.1-8b-instant',
+        provider: 'groq',
+        displayName: 'Llama 3.1 8B (Groq)',
+        pricing: {
+            inputPerMillion: 0.05,
+            outputPerMillion: 0.08,
+            lastUpdated: '2024-12-14'
+        },
+        capabilities: ['text-generation', 'json-mode', 'tool-calling'],
+        contextWindow: 128000,
+        maxOutput: 8192,
+        speed: 'fast',
+        qualityTier: 3
+    },
+    {
         id: 'llama3-70b-8192',
         provider: 'groq',
-        displayName: 'Llama 3 70B (Groq)',
+        displayName: 'Llama 3 70B (Legacy)',
         pricing: {
-            inputPerMillion: 0, // Currently Free
+            inputPerMillion: 0, // Legacy Free Tier
             outputPerMillion: 0,
             lastUpdated: '2024-12-12'
         },
@@ -443,31 +473,31 @@ const GROQ_MODELS: ModelDefinition[] = [
         qualityTier: 4
     },
     {
-        id: 'llama3-8b-8192',
-        provider: 'groq',
-        displayName: 'Llama 3 8B (Groq)',
-        pricing: {
-            inputPerMillion: 0,
-            outputPerMillion: 0,
-            lastUpdated: '2024-12-12'
-        },
-        capabilities: ['text-generation', 'json-mode', 'tool-calling'],
-        contextWindow: 8192,
-        maxOutput: 4096,
-        speed: 'fast',
-        qualityTier: 3
-    },
-    {
         id: 'mixtral-8x7b-32768',
         provider: 'groq',
         displayName: 'Mixtral 8x7B (Groq)',
         pricing: {
-            inputPerMillion: 0,
-            outputPerMillion: 0,
-            lastUpdated: '2024-12-12'
+            inputPerMillion: 0.24,
+            outputPerMillion: 0.24,
+            lastUpdated: '2024-12-14'
         },
         capabilities: ['text-generation', 'json-mode', 'tool-calling'],
         contextWindow: 32768,
+        maxOutput: 4096,
+        speed: 'fast',
+        qualityTier: 4
+    },
+    {
+        id: 'gemma2-9b-it',
+        provider: 'groq',
+        displayName: 'Gemma 2 9B',
+        pricing: {
+            inputPerMillion: 0.20,
+            outputPerMillion: 0.20,
+            lastUpdated: '2024-12-14'
+        },
+        capabilities: ['text-generation', 'json-mode', 'tool-calling'],
+        contextWindow: 8192,
         maxOutput: 4096,
         speed: 'fast',
         qualityTier: 3

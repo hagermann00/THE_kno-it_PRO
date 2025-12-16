@@ -151,19 +151,22 @@ export class ResearchEngine {
 
         switch (depth) {
             case 'flash':
-                models = ['gemini-2.5-flash-lite'];
+                // Mix of ultra-fast models from Google, Meta (Groq), and Google (Groq)
+                models = ['llama-3.1-8b-instant', 'gemini-2.5-flash-lite', 'gemma2-9b-it'];
                 break;
 
             case 'budget':
-                models = ['deepseek-chat'];
+                // Prioritize Groq (Llama 3.1 8B) for ultra-low cost
+                models = ['llama-3.1-8b-instant', 'deepseek-chat'];
                 break;
 
             case 'quick':
-                models = ['gemini-2.5-flash'];
+                models = ['gemini-2.5-flash', 'llama-3.3-70b-versatile'];
                 break;
 
             case 'standard':
-                models = ['gemini-2.5-flash', 'gpt-4o-mini', 'claude-3.5-haiku'];
+                // Diverse council: Google, OpenAI, Anthropic, and Mistral (Groq)
+                models = ['gemini-2.5-flash', 'gpt-4o-mini', 'claude-3.5-haiku', 'mixtral-8x7b-32768'];
                 validateOutliers = true;
                 break;
 
@@ -270,7 +273,7 @@ export class ResearchEngine {
                         if (backupProviderId) {
                             const backupModel =
                                 backupProviderId === 'gemini' ? 'gemini-2.5-flash' :
-                                    backupProviderId === 'groq' ? 'llama3-70b-8192' :
+                                    backupProviderId === 'groq' ? 'llama-3.1-8b-instant' :
                                         backupProviderId === 'openai' ? 'gpt-4o-mini' :
                                             'claude-3.5-haiku'; // anthropic default
 
