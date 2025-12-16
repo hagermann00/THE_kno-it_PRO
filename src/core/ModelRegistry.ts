@@ -471,6 +471,36 @@ const GROQ_MODELS: ModelDefinition[] = [
         maxOutput: 4096,
         speed: 'fast',
         qualityTier: 4
+    },
+    {
+        id: 'mixtral-8x7b-32768',
+        provider: 'groq',
+        displayName: 'Mixtral 8x7B (Groq)',
+        pricing: {
+            inputPerMillion: 0.24,
+            outputPerMillion: 0.24,
+            lastUpdated: '2024-12-14'
+        },
+        capabilities: ['text-generation', 'json-mode', 'tool-calling'],
+        contextWindow: 32768,
+        maxOutput: 4096,
+        speed: 'fast',
+        qualityTier: 4
+    },
+    {
+        id: 'gemma2-9b-it',
+        provider: 'groq',
+        displayName: 'Gemma 2 9B',
+        pricing: {
+            inputPerMillion: 0.20,
+            outputPerMillion: 0.20,
+            lastUpdated: '2024-12-14'
+        },
+        capabilities: ['text-generation', 'json-mode', 'tool-calling'],
+        contextWindow: 8192,
+        maxOutput: 4096,
+        speed: 'fast',
+        qualityTier: 3
     }
 ];
 

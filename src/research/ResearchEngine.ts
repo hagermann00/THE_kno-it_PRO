@@ -151,7 +151,8 @@ export class ResearchEngine {
 
         switch (depth) {
             case 'flash':
-                models = ['llama-3.1-8b-instant', 'gemini-2.5-flash-lite'];
+                // Mix of ultra-fast models from Google, Meta (Groq), and Google (Groq)
+                models = ['llama-3.1-8b-instant', 'gemini-2.5-flash-lite', 'gemma2-9b-it'];
                 break;
 
             case 'budget':
@@ -164,7 +165,8 @@ export class ResearchEngine {
                 break;
 
             case 'standard':
-                models = ['gemini-2.5-flash', 'gpt-4o-mini', 'claude-3.5-haiku'];
+                // Diverse council: Google, OpenAI, Anthropic, and Mistral (Groq)
+                models = ['gemini-2.5-flash', 'gpt-4o-mini', 'claude-3.5-haiku', 'mixtral-8x7b-32768'];
                 validateOutliers = true;
                 break;
 
