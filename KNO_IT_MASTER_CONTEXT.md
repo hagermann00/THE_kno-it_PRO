@@ -1,97 +1,241 @@
-# KNO-IT: The Savage Knowledge Engine
-**Master Context & Architecture Document**
-
-## 1. Project Status
-**Current Version:** v0.3.0 "The Book of Truth"
-**Date:** December 14, 2025
-**Status:** FULLY OPERATIONAL (Research Protocols Active)
-
-### Recent Accomplishments (v0.3.x)
-- [x] **Master Protocols:** "Book of Truth," "Savage Mode," and "Deep Dive" presets active.
-- [x] **Semantic Caching:** Zero-cost processing for repeated or similar queries (`text-embedding-004`).
-- [x] **Future-Proof Archival:** Auto-generation of Markdown artifacts with YAML metadata for future RAG consumption.
-- [x] **Cloud Integration:** Zero-Config Google Drive backup of both DB and Artifacts.
-- [x] **Ephemeral Workspace:** `data/working` for inter-agent scratchpads and debugging.
-- [x] **Budget Awareness:** Dynamic model fallback (Grade A -> Grade B) based on cost caps.
-
-### Immediate Next Steps (Phase 4)
-1.  **Frontend Dashboard:** React-based visual interface (Active Development).
-2.  **kb-it Module:** Design the upstream knowledge base that ingests the `data/canvas` and `artifacts` folder.
-3.  **Git Archival:** Automate pushing artifacts to a private repository for version control.
+# KNO-IT MASTER CONTEXT
+## Complete System Documentation
+**Last Updated:** 2025-12-17T08:11:00-06:00  
+**Version:** 0.1.0  
+**Status:** ✅ OPERATIONAL - Build Passing, Y-It Protocol Wired
 
 ---
 
-## 2. The Vision: "Savage Knowledge"
-Kno-It is not a passive search tool. It is a **Strategic Intelligence Weapon** designed to transform an indifferent user into a dominant force in any decisive moment.
-*   **Goal:** Provide asymmetric information leverage.
-*   **Philosophy:** "Facts are Ammo." We don't just find answers; we find *leverage*, *weaknesses*, and *high-value outliers*.
+## 🎯 PROJECT OVERVIEW
+
+**Kno-It** is a multi-LLM research orchestration engine designed to query multiple AI models, synthesize consensus answers, detect outliers, and provide confidence-scored results with full cost tracking.
+
+### Core Philosophy
+- **Multi-Model Consensus**: Query 2-5 LLMs simultaneously for the same question
+- **Outlier Detection**: Flag responses that deviate significantly from consensus
+- **Cost Optimization**: Track and minimize API costs across providers
+- **Provider Agnostic**: Swap between Gemini, OpenAI, Anthropic, DeepSeek, Groq seamlessly
+- **Y-It Protocol**: Specialized research mode for investigative deep-dives
 
 ---
 
-## 3. System Architecture
+## 📁 PROJECT STRUCTURE
 
-### 3.1 Current State: "The Hybrid Backend"
-The system currently exists as a powerful Node.js/TypeScript backend logic engine.
-*   **Core:** `ResearchEngine.ts` orchestrates multi-model queries using specific protocols (e.g., `y-it`).
-*   **Analysis:** `ConsensusEngine.ts` calculates truth probabilities and variances.
-*   **Memory:** `StorageEngine.ts` (SQLite) + **Artifact System** (Markdown/YAML).
-*   **Providers:** Gemini (Flash/Pro/Embeddings), OpenAI, Anthropic, DeepSeek, Groq (Llama 3.3).
-
-### 3.2 Target State: "The Command Center" (React/Visual)
-We are moving toward a visual dashboard (React/Next.js) that acts as a **Switchboard**:
-*   **Live Controls:** Toggle "Savage Mode", "C-Suite Personas", "Grounding".
-*   **The Arena:** Visual comparison of model outputs.
-*   **Browser Bridge:** "Sidecar" integration to leverage existing authenticated browser sessions.
-
----
-
-## 4. Feature Inventory
-
-### ✅ Completed (Foundation)
-*   **Multi-Provider Registry:** Agnostic handling of all major LLM APIs.
-*   **Free-Tier Optimization:** Logic to route queries to free models (Gemini Flash, Groq).
-*   **Consensus Algorithm:** Statistical analysis of model agreement.
-*   **Outlier Isolation:** Identifying distinct minority opinions.
-*   **Storage Architecture:** `better-sqlite3` local DB with Multi-Cloud Backup (OneDrive/Google Drive).
-*   **Artifact Generation:** Creating "Smart Files" for future ingestion.
-*   **Semantic Search:** Vector-based cache retrieval.
-
-### 🚧 In Progress (The "Savage" Upgrade)
-*   **Frontend Dashboard:** React-based visual interface.
-*   **KB-IT:** Dedicated Knowledge Base module.
-
----
-
-## 5. Multi-Agent Development Plan
-
-### 🔹 Track 1: The Storage Agent (Memory) - [COMPLETE]
-*   **Focus:** SQLite Implementation, Vector/Semantic Caching, Artifact Archival.
-*   **Status:** Operational. `StorageEngine` handles DB syncing and Markdown generation.
-
-### 🔹 Track 2: The Routing Agent (Intelligence) - [COMPLETE]
-*   **Focus:** `PersonaRegistry`, `GroundingSwitchboard`, "Savage Mode" logic.
-*   **Status:** Operational. "Y-It Master Protocol" deployed.
-
-### 🔹 Track 3: The Frontend Agent (Interface) - [ACTIVE]
-*   **Focus:** React/Next.js Dashboard.
-*   **Goal:** "The War Room." A visual command center for the user.
-*   **Status:** Pending.
+```
+C:\Y-OS\Y-IT_ENGINES\kno-it\
+├── src/
+│   ├── core/
+│   │   ├── types.ts              # All TypeScript interfaces & types
+│   │   ├── ModelRegistry.ts      # Model definitions & cost tables
+│   │   ├── PersonaRegistry.ts    # System prompts for different personas
+│   │   ├── prompts.ts            # Y_IT_MASTER_PROTOCOL prompt template
+│   │   └── config.ts             # Configuration management
+│   ├── providers/
+│   │   ├── LLMProvider.ts        # Abstract base provider class
+│   │   ├── GeminiProvider.ts     # Google Gemini integration
+│   │   ├── OpenAIProvider.ts     # OpenAI GPT integration
+│   │   ├── AnthropicProvider.ts  # Claude integration (FIXED)
+│   │   ├── DeepSeekProvider.ts   # DeepSeek integration (FIXED)
+│   │   ├── GroqProvider.ts       # Groq free tier integration
+│   │   └── MockProvider.ts       # Zero-cost simulation mode (FIXED)
+│   ├── research/
+│   │   ├── ResearchEngine.ts     # Main orchestration engine
+│   │   ├── ConsensusBuilder.ts   # Multi-response synthesis
+│   │   └── OutlierDetector.ts    # Statistical outlier flagging
+│   ├── storage/
+│   │   ├── StorageEngine.ts      # Semantic caching & persistence
+│   │   └── GoogleDriveBackup.ts  # Cloud backup integration
+│   ├── grounding/
+│   │   └── GroundingSwitchboard.ts # Live web search integration
+│   ├── demo.ts                   # Standard demo script
+│   ├── y-it-demo.ts              # Y-It Protocol demo script
+│   └── index.ts                  # Main exports
+├── dist/                         # Compiled JavaScript output
+├── .env                          # API keys (gitignored)
+├── package.json                  # Dependencies & scripts
+├── tsconfig.json                 # TypeScript configuration
+└── KNO_IT_MASTER_CONTEXT.md      # THIS FILE
+```
 
 ---
 
-## 6. Technical Constraints & Specifications
-*   **Hardware:** CPU-Only Environment (No heavy local LLMs/Quantization).
-*   **Strategy:** Offload compute to Cloud APIs (Free Tier) wherever possible.
-*   **Storage:** Local NVMe for speed (`./data/*.db`), Cloud for safety (OneDrive Sync), Git for Versioning (Planned).
-*   **Dependencies:** `better-sqlite3` (DB), `dotenv` (Config), `zod` (Validation).
+## 🔧 KEY TYPES & INTERFACES
+
+### ResearchDepth
+```typescript
+export type ResearchDepth = 'flash' | 'budget' | 'quick' | 'standard' | 'verified' | 'deep-dive' | 'y-it';
+```
+
+| Depth | Models Used | Use Case |
+|-------|-------------|----------|
+| `flash` | 1 model (fastest/cheapest) | Quick lookups |
+| `budget` | 1-2 free-tier models | Cost-conscious queries |
+| `quick` | 2 models | Fast consensus |
+| `standard` | 3 models | Balanced accuracy/cost |
+| `verified` | 4 models | High-confidence answers |
+| `deep-dive` | 5+ models | Maximum consensus |
+| `y-it` | gemini-2.5-flash | **INVESTIGATIVE PROTOCOL** |
+
+### ProviderID
+```typescript
+export type ProviderID = 'gemini' | 'openai' | 'anthropic' | 'deepseek' | 'ollama' | 'groq' | 'huggingface';
+```
+
+### ModelCapability
+```typescript
+export type ModelCapability = 'text-generation' | 'json-mode' | 'tool-calling' | 'vision' | 'extended-thinking';
+```
 
 ---
 
-## 7. Immediate Next Steps / TODOs
-1.  **Frontend Bootstrap:** Initialize the React Dashboard project.
-2.  **Git Integration:** Hook `StorageEngine` to `git commit` for artifact versioning.
-3.  **Expand Prompts:** Add more specific protocols for Tech Review, Code Audit, etc.
+## 🕵️ Y-IT MASTER PROTOCOL
+
+The Y-It Protocol is a specialized research mode for investigative deep-dives. It uses a structured prompt template to evaluate topics through a forensic lens.
+
+### Activation
+```typescript
+const engine = new ResearchEngine({
+    depth: 'y-it',
+    persona: 'investigator',
+    // other config...
+});
+```
+
+### Prompt Template Location
+`src/core/prompts.ts` exports `Y_IT_MASTER_PROTOCOL`
+
+### Template Structure
+The Y-It Master Protocol evaluates topics across:
+1. **Profitability Index** - Expected returns vs. effort
+2. **Setup Effort** - Low/Medium/High barrier to entry
+3. **Risk Assessment** - Financial, legal, reputational risks
+4. **Reality Check** - Separates hype from sustainable models
+5. **Actionable Verdict** - Clear recommendation with reasoning
 
 ---
 
-*This document serves as the Source of Truth for the Kno-It project.*
+## 👤 PERSONAS
+
+Located in `src/core/PersonaRegistry.ts`:
+
+| Persona ID | Name | Description |
+|------------|------|-------------|
+| `analyst` | Standard Analyst | Balanced, factual responses |
+| `cfo` | CFO Advisor | Financial focus, cost-conscious |
+| `cto` | CTO Advisor | Technical depth, implementation details |
+| `savage` | Brutal Critic | No-holds-barred, cuts through BS |
+| `investigator` | Lead Investigator | Forensic journalist, myth-buster |
+
+---
+
+## 🚀 AVAILABLE SCRIPTS
+
+```bash
+npm run build        # Compile TypeScript to dist/
+npm run demo         # Run standard research demo
+npm run dev          # Watch mode for development
+```
+
+### Manual Y-It Demo
+```bash
+npx tsx src/y-it-demo.ts
+```
+
+---
+
+## 🔑 ENVIRONMENT VARIABLES
+
+Required in `.env`:
+```
+GEMINI_API_KEY=your_key_here
+OPENAI_API_KEY=your_key_here
+ANTHROPIC_API_KEY=your_key_here
+DEEPSEEK_API_KEY=your_key_here
+GROQ_API_KEY=your_key_here
+BRAVE_SEARCH_API_KEY=your_key_here  # For grounding
+```
+
+**Free Tier Priority:**
+1. Gemini 2.5 Flash (most generous free tier)
+2. Groq (Llama 3 free tier)
+3. DeepSeek (budget pricing)
+
+---
+
+## 🛠️ RECENT FIXES (2025-12-17)
+
+### Build Errors Resolved
+1. **AnthropicProvider.ts**
+   - Fixed: `thinking` property type error (removed - SDK doesn't support it in NonStreaming)
+   - Fixed: Explicit `Anthropic.Message` return type
+   - Fixed: Block type annotations for filter callbacks
+
+2. **DeepSeekProvider.ts**
+   - Fixed: `ProviderID` type annotation for `id` property
+   - Fixed: `FunctionParameters` cast for tool parameters
+
+3. **MockProvider.ts**
+   - Fixed: `ProviderID` type for constructor and `id` property
+
+### Y-It Protocol Verification
+- ✅ `ResearchDepth` includes `'y-it'`
+- ✅ `PersonaRegistry` includes `investigator`
+- ✅ `ResearchEngine.getWorkflow()` handles `case 'y-it':`
+- ✅ `Y_IT_MASTER_PROTOCOL` imported and used for y-it depth
+
+---
+
+## 📊 ARCHITECTURE DIAGRAM
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      USER REQUEST                            │
+│                 "Research: Dropshipping"                     │
+└─────────────────────────────┬───────────────────────────────┘
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    RESEARCH ENGINE                           │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐          │
+│  │ Persona     │  │ Depth       │  │ Grounding   │          │
+│  │ Registry    │  │ Config      │  │ Switchboard │          │
+│  └─────────────┘  └─────────────┘  └─────────────┘          │
+└─────────────────────────────┬───────────────────────────────┘
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    PROVIDER LAYER                            │
+│  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐     │
+│  │ Gemini │ │ OpenAI │ │ Claude │ │DeepSeek│ │  Groq  │     │
+│  └────────┘ └────────┘ └────────┘ └────────┘ └────────┘     │
+└─────────────────────────────┬───────────────────────────────┘
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  CONSENSUS BUILDER                           │
+│           Compare responses → Detect outliers →              │
+│           Calculate confidence → Synthesize answer           │
+└─────────────────────────────┬───────────────────────────────┘
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    STORAGE ENGINE                            │
+│         Semantic Cache │ Local Storage │ Drive Backup        │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🔗 REPOSITORY
+
+**GitHub:** https://github.com/hagermann00/THE_kno-it_PRO
+
+---
+
+## 📝 NEXT STEPS / ROADMAP
+
+1. [ ] Add CLI architect mode for custom workflow design
+2. [ ] Implement streaming responses for long research
+3. [ ] Add MCP (Model Context Protocol) server integration
+4. [ ] Build web UI for interactive research sessions
+5. [ ] Add Google Drive auto-backup scheduling
+
+---
+
+*This context file is the single source of truth for the Kno-It system. Update this file when making significant changes.*
