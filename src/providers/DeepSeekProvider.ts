@@ -8,11 +8,11 @@
 
 import OpenAI from 'openai';
 import { LLMProvider } from './LLMProvider.js';
-import { TextGenParams, TextGenResult, ModelCapability } from '../core/types.js';
+import { TextGenParams, TextGenResult, ModelCapability, ProviderID } from '../core/types.js';
 import { modelRegistry } from '../core/ModelRegistry.js';
 
 export class DeepSeekProvider extends LLMProvider {
-    readonly id = 'deepseek' as const;
+    readonly id: ProviderID = 'deepseek';
     readonly name = 'DeepSeek';
 
     private client: OpenAI;
@@ -78,7 +78,7 @@ export class DeepSeekProvider extends LLMProvider {
                     function: {
                         name: tool.name,
                         description: tool.description,
-                        parameters: tool.parameters
+                        parameters: tool.parameters as OpenAI.FunctionParameters
                     }
                 }));
             }

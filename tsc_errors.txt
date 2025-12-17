@@ -1,0 +1,6 @@
+﻿src/providers/AnthropicProvider.ts(58,31): error TS2339: Property 'thinking' does not exist on type 'MessageCreateParamsNonStreaming'.
+src/providers/DeepSeekProvider.ts(76,17): error TS2322: Type '{ type: "function"; function: { name: string; description: string; parameters: object; }; }[]' is not assignable to type 'ChatCompletionTool[]'.
+  Type '{ type: "function"; function: { name: string; description: string; parameters: object; }; }' is not assignable to type 'ChatCompletionTool'.
+    The types of 'function.parameters' are incompatible between these types.
+      Type 'object' is not assignable to type 'FunctionParameters'.
+        Index signature for type 'string' is missing in type '{}'.

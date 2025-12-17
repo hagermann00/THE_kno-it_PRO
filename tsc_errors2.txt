@@ -1,0 +1,14 @@
+﻿src/providers/AnthropicProvider.ts(73,64): error TS2352: Conversion of type 'Record<string, unknown>' to type 'MessageCreateParams' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type 'Record<string, unknown>' is missing the following properties from type 'MessageCreateParamsStreaming': stream, max_tokens, messages, model
+src/providers/AnthropicProvider.ts(76,42): error TS2339: Property 'content' does not exist on type 'Stream<RawMessageStreamEvent> | Message'.
+  Property 'content' does not exist on type 'Stream<RawMessageStreamEvent>'.
+src/providers/AnthropicProvider.ts(77,26): error TS7006: Parameter 'block' implicitly has an 'any' type.
+src/providers/AnthropicProvider.ts(78,22): error TS7006: Parameter 'block' implicitly has an 'any' type.
+src/providers/AnthropicProvider.ts(82,40): error TS2339: Property 'content' does not exist on type 'Stream<RawMessageStreamEvent> | Message'.
+  Property 'content' does not exist on type 'Stream<RawMessageStreamEvent>'.
+src/providers/AnthropicProvider.ts(83,26): error TS7006: Parameter 'block' implicitly has an 'any' type.
+src/providers/AnthropicProvider.ts(84,22): error TS7006: Parameter 'block' implicitly has an 'any' type.
+src/providers/AnthropicProvider.ts(90,42): error TS2339: Property 'usage' does not exist on type 'Stream<RawMessageStreamEvent> | Message'.
+  Property 'usage' does not exist on type 'Stream<RawMessageStreamEvent>'.
+src/providers/AnthropicProvider.ts(91,43): error TS2339: Property 'usage' does not exist on type 'Stream<RawMessageStreamEvent> | Message'.
+  Property 'usage' does not exist on type 'Stream<RawMessageStreamEvent>'.

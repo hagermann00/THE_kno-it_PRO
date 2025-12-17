@@ -5,14 +5,14 @@
  */
 
 import { LLMProvider } from './LLMProvider.js';
-import { TextGenParams, TextGenResult, ModelCapability } from '../core/types.js';
+import { TextGenParams, TextGenResult, ModelCapability, ProviderID } from '../core/types.js';
 import { modelRegistry } from '../core/ModelRegistry.js';
 
 export class MockProvider extends LLMProvider {
-    readonly id: ProviderID = 'gemini'; // Default
+    readonly id: ProviderID;
     readonly name = 'Kno-It Simulator';
 
-    constructor(private simulatedProviderId: 'gemini' | 'openai' | 'anthropic' | 'deepseek') {
+    constructor(private simulatedProviderId: ProviderID) {
         super();
         this.id = simulatedProviderId;
     }
